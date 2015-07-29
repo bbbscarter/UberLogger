@@ -42,7 +42,10 @@ And the in-game version looks like this:
 * Usage examples can be seen in the Examples folder.
 
 ## Notes
-* Currently only tested in Unity 5 Free, but should work in Pro.
+* Currently only tested in Unity 4 and 5 Free, but should work in Pro.
+* Due to file incompatibilities, the in-game console skin doesn't work
+  in Unity 4 and would need to be set up again. Same with the
+  prefab. That said, the code works, and so does the editor UberConsole.
 * Pull requests welcome!
 
  * * * *
