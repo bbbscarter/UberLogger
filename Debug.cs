@@ -143,9 +143,16 @@ public static class Debug
     {
         UnityEngine.Debug.Log(message);
     }
+
     [LogUnityOnly]
-    static public void UnityLogFormat(string message, params object[] par)
+    static public void UnityLogWarning(object message)
     {
-        UnityEngine.Debug.LogFormat(message, par);
+        UnityEngine.Debug.LogWarning(message);
+    }
+
+    [LogUnityOnly]
+    static public void UnityLogError(object message)
+    {
+        UnityEngine.Debug.LogError(message);
     }
 }
