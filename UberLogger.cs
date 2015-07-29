@@ -103,7 +103,7 @@ namespace UberLogger
     [System.Serializable]
     public class LogInfo
     {
-        public GameObject Source;
+        public UnityEngine.Object Source;
         public string Channel;
         public LogSeverity Severity;
         public string Message;
@@ -116,7 +116,7 @@ namespace UberLogger
             return TimeStampAsString;
         }
 
-        public LogInfo(GameObject source, string channel, LogSeverity severity, List<LogStackFrame> callstack, object message, params object[] par)
+        public LogInfo(UnityEngine.Object source, string channel, LogSeverity severity, List<LogStackFrame> callstack, object message, params object[] par)
         {
             Source = source;
             Channel = channel;
@@ -325,7 +325,7 @@ namespace UberLogger
 
 
         [StackTraceIgnore()]
-        static public void Log(string channel, GameObject source, LogSeverity severity, object message, params object[] par)
+        static public void Log(string channel, UnityEngine.Object source, LogSeverity severity, object message, params object[] par)
         {
             lock(Loggers)
             {

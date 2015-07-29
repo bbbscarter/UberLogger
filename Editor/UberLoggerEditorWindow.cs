@@ -287,10 +287,10 @@ public class UberLoggerEditorWindow : EditorWindow
                         }
 
                         //Always select the game object that is the source of this message
-                        // var go = log.Source as GameObject;
-                        if(log.Source!=null)
+                        var go = log.Source as GameObject;
+                        if(go!=null)
                         {
-                            Selection.activeGameObject = log.Source;
+                            Selection.activeGameObject = go;
                         }
 
                     }
@@ -568,7 +568,7 @@ public class UberLoggerEditorWindow : EditorWindow
     UberLoggerEditor EditorLogger;
 
     //Standard unity pro colours
-    Color SelectedLineColour = new Color(35.0f/255.0f, 95.0f/255.0f, 153.0f/255.0f);
+    // Color SelectedLineColour = new Color(35.0f/255.0f, 95.0f/255.0f, 153.0f/255.0f);
     Color LineColour1 = new Color(57.0f/255.0f, 57.0f/255.0f, 57.0f/255.0f);
     Color LineColour2 = new Color(52.0f/255.0f, 52.0f/255.0f, 52.0f/255.0f);
     Color SizerLineColour = new Color(42.0f/255.0f, 42.0f/255.0f, 42.0f/255.0f);
