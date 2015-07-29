@@ -439,14 +439,7 @@ public class UberLoggerEditorWindow : EditorWindow
 
     List<string> GetChannels()
     {
-        var categories = new HashSet<string>();
-        foreach(var logInfo in EditorLogger.LogInfo)
-        {
-            if(!String.IsNullOrEmpty(logInfo.Channel) && !categories.Contains(logInfo.Channel))
-            {
-                categories.Add(logInfo.Channel);
-            }
-        }
+        var categories = EditorLogger.Channels;
         
         var channelList = new List<string>();
         channelList.Add("All");

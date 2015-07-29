@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEditor;
 using UberLogger;
 
@@ -17,17 +18,12 @@ public class UberLoggerEditor : ScriptableObject, ILogger
     static public UberLoggerEditor Create()
     {
         var editorDebug = ScriptableObject.FindObjectOfType<UberLoggerEditor>();
-        // UnityEngine.Debug.Log("Found " + editorDebug);
 
         if(editorDebug==null)
         {
-            // UnityEngine.Debug.LogError("Creating new editor logger");
             editorDebug = ScriptableObject.CreateInstance<UberLoggerEditor>();
         }
-        // else
-        // {
-        //     UnityEngine.Debug.Log("Found editor logger from searching");
-        // }
+
         editorDebug.NoErrors = 0;
         editorDebug.NoWarnings = 0;
         editorDebug.NoMessages = 0;
@@ -38,14 +34,10 @@ public class UberLoggerEditor : ScriptableObject, ILogger
     public void OnEnable()
     {
         EditorApplication.playmodeStateChanged += OnPlaymodeStateChanged;
+
         //Make this scriptable object persist between Play sessions
         hideFlags = HideFlags.HideAndDontSave;
     }
-
-    // public void OnDestroy()
-    // {
-    //     EditorApplication.playmodeStateChanged -= OnPlaymodeStateChanged;
-    // }
 
     public void ProcessOnStartClear()
     {
@@ -67,11 +59,15 @@ public class UberLoggerEditor : ScriptableObject, ILogger
     public int NoErrors;
     public int NoWarnings;
     public int NoMessages;
+    public HashSet<string> Channels = new HashSet<string>();
 
     public void Log(LogInfo logInfo)
     {
-        // UnityEngine.Debug.Break();
-        // UnityEngine.Debug.Log("Getting log from " + logInfo.Message);
+        if(!String.IsNullOrEmpty(logInfo.Channel) && !Channels.Contains(logInfo.Channel))
+        {
+            Channels.Add(logInfo.Channel);
+        }
+
         ProcessOnStartClear();
         LogInfo.Add(logInfo);
         if(logInfo.Severity==LogSeverity.Error)
@@ -95,6 +91,7 @@ public class UberLoggerEditor : ScriptableObject, ILogger
     public void Clear()
     {
         LogInfo.Clear();
+        Channels.Clear();
         NoWarnings = 0;
         NoErrors = 0;
         NoMessages = 0;

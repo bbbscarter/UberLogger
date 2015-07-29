@@ -142,6 +142,7 @@ namespace UberLogger
         static List<ILogger> Loggers = new List<ILogger>();
         static LinkedList<LogInfo> RecentMessages = new LinkedList<LogInfo>();
         public static int MaxMessagesToKeep = 1000;
+        public static bool ForwardMessages = true;
         static double StartTime;
 
         static bool AlreadyLogging = false;
@@ -347,6 +348,10 @@ namespace UberLogger
                         TrimOldMessages();
                         Loggers.RemoveAll(l=>l==null);
                         Loggers.ForEach(l=>l.Log(logInfo));
+                        if(ForwardMessages)
+                        {
+                            ForwardToUnity(source, severity, message as string, par);
+                        }
                     }
                     finally
                     {
@@ -354,6 +359,24 @@ namespace UberLogger
                     }
                 }
             }
+        }
+
+        [LogUnityOnly()]
+        static void ForwardToUnity(UnityEngine.Object source, LogSeverity severity, string message, params object[] par)
+        {
+            if(source==null)
+            {
+                if(severity==LogSeverity.Message) UnityEngine.Debug.LogFormat(message, par);
+                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarningFormat(message, par);
+                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogErrorFormat(message, par);
+            }
+            else
+            {
+                if(severity==LogSeverity.Message) UnityEngine.Debug.LogFormat(source, message, par);
+                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarningFormat(source, message, par);
+                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogErrorFormat(source, message, par);
+            }
+            
         }
         static public T GetLogger<T>() where T:class
         {
