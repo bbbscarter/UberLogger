@@ -37,7 +37,13 @@ public class UberLoggerEditorWindow : EditorWindow
         Logger.AddLogger(EditorLogger);
 
         
+#if UNITY_5
         titleContent.text = "Uber Console";
+#else
+        title = "Uber Console";
+
+#endif
+        
          
         ClearSelectedMessage();
 

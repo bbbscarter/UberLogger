@@ -149,8 +149,11 @@ namespace UberLogger
 
         static Logger()
         {
-            // Application.RegisterLogCallback(UnityLogHandler);
+#if UNITY_5
             Application.logMessageReceived += UnityLogHandler;
+#else
+            Application.RegisterLogCallback(UnityLogHandler);
+#endif
             StartTime = GetTime();
         }
 
@@ -366,15 +369,15 @@ namespace UberLogger
         {
             if(source==null)
             {
-                if(severity==LogSeverity.Message) UnityEngine.Debug.LogFormat(message, par);
-                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarningFormat(message, par);
-                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogErrorFormat(message, par);
+                if(severity==LogSeverity.Message) UnityEngine.Debug.Log(String.Format(message, par));
+                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarning(String.Format(message, par));
+                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogError(String.Format(message, par));
             }
             else
             {
-                if(severity==LogSeverity.Message) UnityEngine.Debug.LogFormat(source, message, par);
-                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarningFormat(source, message, par);
-                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogErrorFormat(source, message, par);
+                if(severity==LogSeverity.Message) UnityEngine.Debug.Log(String.Format(message, par), source);
+                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarning(String.Format(message, par), source);
+                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogError(String.Format(message, par), source);
             }
             
         }

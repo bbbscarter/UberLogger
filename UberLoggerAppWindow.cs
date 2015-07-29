@@ -106,7 +106,7 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
         {
             buttonPos.y = Screen.height-ButtonSize.y;
         }
-        var buttonRect = new Rect(buttonPos, ButtonSize);
+        var buttonRect = new Rect(buttonPos.x, buttonPos.y, ButtonSize.x, ButtonSize.y);
         var style = new GUIStyle();
 
         if(GUI.Button(buttonRect, buttonTex, style))
