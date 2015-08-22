@@ -8,6 +8,45 @@ using UberLogger;
 public static class Debug
 {
     //Unity replacement methods
+    public static void DrawRay(Vector3 start, Vector3 dir, Color? color=null, float duration = 0.0f, bool depthTest = true)
+    {
+        var col = color ?? Color.white;
+        UnityEngine.Debug.DrawRay(start, dir, col, duration, depthTest);
+    }
+
+    public static void DrawLine(Vector3 start, Vector3 end, Color? color=null, float duration = 0.0f, bool depthTest = true)
+    {
+        var col = color ?? Color.white;
+        UnityEngine.Debug.DrawLine(start, end, col, duration, depthTest);
+    }
+
+    public static void Break()
+    {
+        UnityEngine.Debug.Break();
+    }
+
+#if UNITY_5
+    public static void Assert(bool condition)
+    {
+        UnityEngine.Debug.Assert(condition);
+    }
+
+    public static void Assert(bool condition, string message)
+    {
+        UnityEngine.Debug.Assert(condition, message);
+    }
+
+    public static void Assert(bool condition, string format, params object[] args)
+    {
+        UnityEngine.Debug.Assert(condition, format, args);
+    }
+    
+    public static void ClearDeveloperConsole()
+    {
+        UnityEngine.Debug.ClearDeveloperConsole();
+    }
+#endif
+
     [StackTraceIgnore]
     static public void LogFormat(UnityEngine.Object context, string message, params object[] par)
     {
