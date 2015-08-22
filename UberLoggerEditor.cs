@@ -7,6 +7,12 @@ using UnityEditor;
 using UberLogger;
 
 
+/// <summary>
+/// The basic editor logger backend
+/// This is seperate from the editor frontend, so we can have multiple frontends active if we wish,
+///  and so that we catch errors even without the frontend active.
+/// Derived from ScriptableObject so it persists across play sessions.
+/// </summary>
 [System.Serializable]
 public class UberLoggerEditor : ScriptableObject, ILogger
 {
@@ -39,6 +45,9 @@ public class UberLoggerEditor : ScriptableObject, ILogger
         hideFlags = HideFlags.HideAndDontSave;
     }
 
+    /// <summary>
+    /// If we're about to start playing and 'ClearOnPlay' is set, clear the current logs
+    /// </summary>
     public void ProcessOnStartClear()
     {
         if(!WasPlaying && EditorApplication.isPlayingOrWillChangePlaymode)

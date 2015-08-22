@@ -6,15 +6,21 @@ using System;
 using UberLogger;
 
 
+/// <summary>
+/// The in-app console logging frontend and backend
+/// </summary>
 public class UberLoggerAppWindow : MonoBehaviour, ILogger
 {
     public GUISkin Skin;
-    List<UberLogger.LogInfo> LogInfo = new List<LogInfo>();
-    bool PauseOnError = false;
-    int NoErrors;
-    int NoWarnings;
-    int NoMessages;
-    Rect WindowRect = new Rect(0,0, 100, 100);
+    public Texture2D SmallErrorIcon;
+    public Texture2D SmallWarningIcon;
+    public Texture2D SmallMessageIcon;
+    public Color GUIColour = new Color(1, 1, 1, 0.5f);
+
+    //If non-zero, scales the fonts
+    public int FontSize = 0;
+    public Color SizerLineColour = new Color(42.0f/255.0f, 42.0f/255.0f, 42.0f/255.0f);
+    public float SizerStartHeightRatio = 0.75f;
 
     public void Log(LogInfo logInfo)
     {
@@ -60,6 +66,9 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
     public Vector2 ButtonPosition;
     public Vector2 ButtonSize = new Vector2(32, 32);
     
+    /// <summary>
+    ///   Shows either the activation button or the full UI
+    /// </summary>
     public void OnGUI()
     {
         GUI.skin = Skin;
@@ -115,7 +124,9 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
         }
     }
 
-    public float Offset;
+    /// <summary>
+    /// Draws the main window
+    /// </summary>
     void DrawWindow(int windowID)
     {
         // GUI.DragWindow(new Rect(0, 0, 10000, 20));
@@ -160,6 +171,9 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
         GUILayout.Label(text, style, GUILayout.MaxWidth(style.CalcSize(new GUIContent(text)).x));
     }
 
+    /// <summary>
+    /// Draws the thin, Unity-style toolbar showing error counts and toggle buttons
+    /// </summary>
     void DrawToolbar()
     {
         var toolbarStyle = GUI.skin.customStyles[3];
@@ -188,6 +202,9 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
         GUILayout.EndHorizontal();
     }
 
+    /// <summary>
+    /// Draws the channel selector
+    /// </summary>
     void DrawChannels()
     {
         var channels = GetChannels();
@@ -209,6 +226,9 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
         }
     }
 
+    /// <summary>
+    /// Based on filter and channel selections, should this log be shown?
+    /// </summary>
     bool ShouldShowLog(System.Text.RegularExpressions.Regex regex, LogInfo log)
     {
         if(log.Channel==CurrentChannel || CurrentChannel=="All" || (CurrentChannel=="No Channel" && String.IsNullOrEmpty(log.Channel)))
@@ -227,6 +247,9 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
         return false;
     }
 
+    /// <summary>
+    /// Draws the main log panel
+    /// </summary>
     public void DrawLogList()
     {
         var oldColor = GUI.backgroundColor;
@@ -254,18 +277,16 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
                 drawnButtons++;
 
                 //This is an optimisation - if the button isn't going to display because it's outside of the scroll window, don't show it.
+                //But, so as not to confuse GUILayout, draw something simple instead.
                 if(buttonY+buttonHeight>LogListScrollPosition.y && buttonY<LogListScrollPosition.y+maxLogPanelHeight)
                 {
                     if(c1==SelectedMessage)
                     {
                         logLineStyle = SelectedLogLineStyle;
-                        // GUI.backgroundColor = SelectedLineColour;
                     }
                     else
                     {
-                        // logLineStyle = LogLineStyle;
                         logLineStyle = (drawnButtons%2==0) ? LogLineStyle1 : LogLineStyle2;
-                        // GUI.backgroundColor = (drawnButtons%2==0) ? LineColour1 : LineColour2;
                     }
                 
                     var showMessage = log.Message;
@@ -311,7 +332,9 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
     }
 
 
-    //The bottom of the panel - details of the selected log
+    /// <summary>
+    /// The bottom of the panel - details of the selected log
+    /// </summary>
     public void DrawLogDetails()
     {
         var oldColor = GUI.backgroundColor;
@@ -340,28 +363,7 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
 
                     if(GUILayout.Button(methodName, logLineStyle))
                     {
-                        if(c1==SelectedCallstackFrame)
-                        {
-                            if(Event.current.button==1)
-                            {
-                            }
-                            else
-                            {
-                                if(Time.realtimeSinceStartup-LastFrameClickTime<0.3f)
-                                {
-                                    LastFrameClickTime = 0;
-                                }
-                                else
-                                {
-                                    LastFrameClickTime = Time.realtimeSinceStartup;
-                                }
-                            }
-                            
-                        }
-                        else
-                        {
-                            SelectedCallstackFrame = c1;
-                        }
+                        SelectedCallstackFrame = c1;
                     }
                 }
 
@@ -436,8 +438,6 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
         GUI.color = SizerLineColour; 
         GUI.DrawTexture(resizerRect, Texture2D.whiteTexture);
         GUI.color = oldColor;
-        // GUIUtility.AddCursorRect(CursorChangeRect,MouseCursor.ResizeVertical);
-         
 
         if( Event.current.type == EventType.mouseDown && resizerRect.Contains(Event.current.mousePosition))
         {
@@ -467,21 +467,19 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
     Vector2 LogListScrollPosition;
     Vector2 LogDetailsScrollPosition;
 
-    public Texture2D SmallErrorIcon;
-    public Texture2D SmallWarningIcon;
-    public Texture2D SmallMessageIcon;
-    public Color GUIColour = new Color(1, 1, 1, 0.5f);
-    public int FontSize = 0;
-    public Color SizerLineColour = new Color(42.0f/255.0f, 42.0f/255.0f, 42.0f/255.0f);
-    public float SizerStartHeightRatio = 0.75f;
 
     bool ShowTimes = true;
     float CurrentTopPaneHeight;
     int SelectedMessage = -1;
 
     double LastMessageClickTime = 0;
-    double LastFrameClickTime = 0;
 
+    List<UberLogger.LogInfo> LogInfo = new List<LogInfo>();
+    bool PauseOnError = false;
+    int NoErrors;
+    int NoWarnings;
+    int NoMessages;
+    Rect WindowRect = new Rect(0,0, 100, 100);
 
 
     GUIStyle LogLineStyle1;

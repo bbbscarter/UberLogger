@@ -6,7 +6,11 @@ using System.Linq;
 using System;
 using UberLogger;
 
-// using System.IO;
+/// <summary>
+/// The console logging frontend.
+/// Pulls data from the UberLoggerEditor backend
+/// </summary>
+
 public class UberLoggerEditorWindow : EditorWindow
 {
     [MenuItem("Window/Show Uber Console")]
@@ -25,6 +29,7 @@ public class UberLoggerEditorWindow : EditorWindow
 
     void OnEnable()
     {
+        // Connect to or create the backend
         if(!EditorLogger)
         {
             EditorLogger = Logger.GetLogger<UberLoggerEditor>();
@@ -34,8 +39,9 @@ public class UberLoggerEditorWindow : EditorWindow
             }
         }
 
+        // UberLogger doesn't allow for duplicate loggers, so this is safe
+        // And, due to Unity serialisation stuff, necessary to do to it here.
         Logger.AddLogger(EditorLogger);
-
         
 #if UNITY_5
         titleContent.text = "Uber Console";
@@ -43,7 +49,6 @@ public class UberLoggerEditorWindow : EditorWindow
         title = "Uber Console";
 
 #endif
-        
          
         ClearSelectedMessage();
 
@@ -53,28 +58,12 @@ public class UberLoggerEditorWindow : EditorWindow
         ErrorIcon = SmallErrorIcon;
         WarningIcon = SmallWarningIcon;
         MessageIcon = SmallMessageIcon;
-
-        // SaveTextureToFile(ErrorIcon, "ErrorIcon.png");
-        // SaveTextureToFile(WarningIcon, "WarningIcon.png");
-        // SaveTextureToFile(MessageIcon, "MessageIcon.png");
     }
-    // void SaveTextureToFile(Texture2D texture, string fileName)
-    // {
-    //     var data = texture.GetRawTextureData();
-    //     var tex = new Texture2D(texture.width, texture.height, texture.format);
-    //     tex.LoadRawTextureData(data);
-    //     var bytes=tex.EncodeToPNG();
-    //     var file = System.IO.File.Open("/Users/scarter//"+fileName,FileMode.Create);
-    //     var binary= new BinaryWriter(file);
-    //     binary.Write(bytes);
-    //     file.Close();
-    // }
 
     public void OnGUI()
     {
         //Set up the basic style, based on the Unity defaults
-        // LogLineStyle = new GUIStyle(EditorStyles.label);
-        // SelectedLogLineStyle = new GUIStyle(EditorStyles.label);
+        //A bit hacky, but means we don't have to ship an editor guistyle and can fit in to pro and free skins
         Color defaultLineColor = GUI.backgroundColor;
         
         foreach(var style in GUI.skin.customStyles)
@@ -88,28 +77,19 @@ public class UberLoggerEditorWindow : EditorWindow
                 SelectedLogLineStyle.active = SelectedLogLineStyle.normal;
                 SelectedLogLineStyle.hover = SelectedLogLineStyle.normal;
                 SelectedLogLineStyle.focused = SelectedLogLineStyle.normal;
-                // SelectedLogLineStyle = new GUIStyle(style);
-                // LogLineStyle = new GUIStyle(style);
+                
                 LogLineStyle.margin = new RectOffset(0, 0, 0,0 );
                 LogLineStyle.normal.background = EditorGUIUtility.whiteTexture;
                 LogLineStyle.active = LogLineStyle.normal;
                 LogLineStyle.hover = LogLineStyle.normal;
                 LogLineStyle.focused = LogLineStyle.normal;
-                // UnityEngine.Debug.Log(LogLineStyle.border);
-                // Debug.UnityLog(LogLineStyle.contentOffset);
                 break;
             }
         }
 
-        // SelectedLineColour = new Color(35.0f/255.0f, 95.0f/255.0f, 153.0f/255.0f);
         LineColour1 = defaultLineColor;
         LineColour2 = new Color(defaultLineColor.r*0.9f, defaultLineColor.g*0.9f, defaultLineColor.b*0.9f);
         SizerLineColour = new Color(defaultLineColor.r*0.5f, defaultLineColor.g*0.5f, defaultLineColor.b*0.5f);
-
-        // LogLineStyle.normal.background = EditorGUIUtility.whiteTexture;
-        // LogLineStyle.active = LogLineStyle.normal;
-        // LogLineStyle.hover = LogLineStyle.normal;
-        // LogLineStyle.focused = LogLineStyle.normal;
 
         GUILayout.BeginVertical(GUILayout.Height(CurrentTopPaneHeight), GUILayout.MinHeight(100));
         DrawToolbar();
@@ -151,6 +131,9 @@ public class UberLoggerEditorWindow : EditorWindow
         GUILayout.Label(text, style, GUILayout.MaxWidth(style.CalcSize(new GUIContent(text)).x));
     }
 
+    /// <summary>
+    /// Draws the thin, Unity-style toolbar showing error counts and toggle buttons
+    /// </summary>
     void DrawToolbar()
     {
         EditorGUILayout.BeginHorizontal();
@@ -179,6 +162,9 @@ public class UberLoggerEditorWindow : EditorWindow
         EditorGUILayout.EndHorizontal();
     }
 
+    /// <summary>
+    /// Draws the channel selector
+    /// </summary>
     void DrawChannels()
     {
         var channels = GetChannels();
@@ -200,6 +186,9 @@ public class UberLoggerEditorWindow : EditorWindow
         }
     }
 
+    /// <summary>
+    /// Based on filter and channel selections, should this log be shown?
+    /// </summary>
     bool ShouldShowLog(System.Text.RegularExpressions.Regex regex, LogInfo log)
     {
         if(log.Channel==CurrentChannel || CurrentChannel=="All" || (CurrentChannel=="No Channel" && String.IsNullOrEmpty(log.Channel)))
@@ -218,6 +207,9 @@ public class UberLoggerEditorWindow : EditorWindow
         return false;
     }
 
+    /// <summary>
+    /// Draws the main log panel
+    /// </summary>
     public void DrawLogList()
     {
         var oldColor = GUI.backgroundColor;
@@ -245,6 +237,7 @@ public class UberLoggerEditorWindow : EditorWindow
                 drawnButtons++;
 
                 //This is an optimisation - if the button isn't going to display because it's outside of the scroll window, don't show it.
+                //But, so as not to confuse GUILayout, draw something simple instead.
                 if(buttonY+buttonHeight>LogListScrollPosition.y && buttonY<LogListScrollPosition.y+maxLogPanelHeight)
                 {
                     if(c1==SelectedMessage)
@@ -313,7 +306,9 @@ public class UberLoggerEditorWindow : EditorWindow
     }
 
 
-    //The bottom of the panel - details of the selected log
+    /// <summary>
+    /// The bottom of the panel - details of the selected log
+    /// </summary>
     public void DrawLogDetails()
     {
         var oldColor = GUI.backgroundColor;
@@ -341,6 +336,7 @@ public class UberLoggerEditorWindow : EditorWindow
                     }
                     
 
+                    // Handle clicks on the stack frame
                     if(GUILayout.Button(methodName, logLineStyle))
                     {
                         if(c1==SelectedCallstackFrame)
@@ -454,6 +450,9 @@ public class UberLoggerEditorWindow : EditorWindow
         return channelList;
     }
 
+    /// <summary>
+    ///   Handles the split window stuff, somewhat bodgily
+    /// </summary>
     private void ResizeTopPane()
     {
         //Set up the resize collision rect
@@ -486,8 +485,10 @@ public class UberLoggerEditorWindow : EditorWindow
     string SourceLines;
     LogStackFrame SourceLinesFrame;
 
-    //If the frame has a valid filename, get the source string for the code around the frame
-    //This is cached, so we don't keep getting it.
+    /// <summary>
+    ///If the frame has a valid filename, get the source string for the code around the frame
+    ///This is cached, so we don't keep getting it.
+    /// </summary>
     string GetSourceForFrame(LogStackFrame frame)
     {
         if(SourceLinesFrame==frame)
@@ -568,9 +569,9 @@ public class UberLoggerEditorWindow : EditorWindow
 
     //Standard unity pro colours
     // Color SelectedLineColour = new Color(35.0f/255.0f, 95.0f/255.0f, 153.0f/255.0f);
-    Color LineColour1 = new Color(57.0f/255.0f, 57.0f/255.0f, 57.0f/255.0f);
-    Color LineColour2 = new Color(52.0f/255.0f, 52.0f/255.0f, 52.0f/255.0f);
-    Color SizerLineColour = new Color(42.0f/255.0f, 42.0f/255.0f, 42.0f/255.0f);
+    Color LineColour1;
+    Color LineColour2;
+    Color SizerLineColour;
 
     GUIStyle LogLineStyle;
     GUIStyle SelectedLogLineStyle;

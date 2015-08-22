@@ -137,7 +137,8 @@ public static class Debug
     }
 
 
-    //Logs that will not be forwarded to UberLogger
+    //Logs that will not be caught by UberLogger
+    //Useful for debugging UberLogger
     [LogUnityOnly]
     static public void UnityLog(object message)
     {
