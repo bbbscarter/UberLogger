@@ -13,17 +13,17 @@ And the in-game version looks like this:
 ![](Pics/UberConsoleGame.png)
 
 ## Core Features
-* Drop in replacement for Unity's Debug.LogXXX(). No code changes
+* Drop in replacement for Unity's Debug.Log() methods. No code changes
   needed.
 * A threadsafe, modular backend that supports any number of loggers,
-  so Debug.Log can be routed to multiple locations. The file logger
-  should work on mobile devices.
+  so Debug.Log can be routed to multiple locations. The supplied file
+  logger should work on mobile devices.
 * Included are a replacement editor console, an in-game console and a
   file logger.
 * Support for named debug channels - Debug.LogChannel("Boot", "Some
   message") can be filtered based on the channel name.
-* Methods may be marked as excluded from callstacks (useful if you are using
-  your own debug system and want to keep things tidy).
+* Methods may be marked as excluded from callstacks by tagging them
+  with '[StackTraceIgnore]', to keep your logs tidy.
 
 ## UberConsole Features
 * More compact view shows more errors in the same space.
