@@ -453,17 +453,23 @@ namespace UberLogger
         [LogUnityOnly()]
         static void ForwardToUnity(UnityEngine.Object source, LogSeverity severity, string message, params object[] par)
         {
+            string showMessage = "";
+            if(message!=null)
+            {
+                showMessage = String.Format(message, par);
+            }
+
             if(source==null)
             {
-                if(severity==LogSeverity.Message) UnityEngine.Debug.Log(String.Format(message, par));
-                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarning(String.Format(message, par));
-                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogError(String.Format(message, par));
+                if(severity==LogSeverity.Message) UnityEngine.Debug.Log(showMessage);
+                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarning(showMessage);
+                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogError(showMessage);
             }
             else
             {
-                if(severity==LogSeverity.Message) UnityEngine.Debug.Log(String.Format(message, par), source);
-                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarning(String.Format(message, par), source);
-                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogError(String.Format(message, par), source);
+                if(severity==LogSeverity.Message) UnityEngine.Debug.Log(showMessage, source);
+                else if(severity==LogSeverity.Warning) UnityEngine.Debug.LogWarning(showMessage, source);
+                else if(severity==LogSeverity.Error) UnityEngine.Debug.LogError(showMessage, source);
             }
             
         }
