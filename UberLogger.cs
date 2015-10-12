@@ -155,7 +155,14 @@ namespace UberLogger
             var messageString = message as String;
             if(messageString!=null)
             {
-                Message = System.String.Format(messageString, par);
+                if(par.Length>0)
+                {
+                    Message = System.String.Format(messageString, par);
+                }
+                else
+                {
+                    Message = messageString;
+                }
             }
             else
             {
@@ -456,7 +463,14 @@ namespace UberLogger
             string showMessage = "";
             if(message!=null)
             {
-                showMessage = String.Format(message, par);
+                if(par.Length>0)
+                {
+                    showMessage = String.Format(message, par);
+                }
+                else
+                {
+                    showMessage = message;
+                }
             }
 
             if(source==null)
