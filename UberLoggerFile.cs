@@ -7,7 +7,7 @@ using UnityEngine;
 /// <summary>
 /// A basic file logger backend
 /// </summary>
-public class UberLoggerFile : ILogger
+public class UberLoggerFile : UberLogger.ILogger
 {
     private StreamWriter LogFileWriter;
     private bool IncludeCallStacks;

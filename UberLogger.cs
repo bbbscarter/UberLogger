@@ -152,6 +152,8 @@ namespace UberLogger
             Source = source;
             Channel = channel;
             Severity = severity;
+            Message = "";
+
             var messageString = message as String;
             if(messageString!=null)
             {
@@ -166,7 +168,10 @@ namespace UberLogger
             }
             else
             {
-                Message = message.ToString();
+                if(message!=null)
+                {
+                    Message = message.ToString();
+                }
             }
 
             Callstack = callstack;

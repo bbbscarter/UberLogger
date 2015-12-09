@@ -14,7 +14,7 @@ using UberLogger;
 /// Derived from ScriptableObject so it persists across play sessions.
 /// </summary>
 [System.Serializable]
-public class UberLoggerEditor : ScriptableObject, ILogger
+public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
 {
     public List<LogInfo> LogInfo = new List<LogInfo>();
     public bool PauseOnError = false;

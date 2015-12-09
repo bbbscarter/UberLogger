@@ -32,7 +32,7 @@ public class UberLoggerEditorWindow : EditorWindow
         // Connect to or create the backend
         if(!EditorLogger)
         {
-            EditorLogger = Logger.GetLogger<UberLoggerEditor>();
+            EditorLogger = UberLogger.Logger.GetLogger<UberLoggerEditor>();
             if(!EditorLogger)
             {
                 EditorLogger = UberLoggerEditor.Create();
@@ -41,7 +41,7 @@ public class UberLoggerEditorWindow : EditorWindow
 
         // UberLogger doesn't allow for duplicate loggers, so this is safe
         // And, due to Unity serialisation stuff, necessary to do to it here.
-        Logger.AddLogger(EditorLogger);
+        UberLogger.Logger.AddLogger(EditorLogger);
         
 #if UNITY_5
         titleContent.text = "Uber Console";

@@ -9,7 +9,7 @@ using UberLogger;
 /// <summary>
 /// The in-app console logging frontend and backend
 /// </summary>
-public class UberLoggerAppWindow : MonoBehaviour, ILogger
+public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
 {
     public GUISkin Skin;
     public Texture2D SmallErrorIcon;
@@ -54,7 +54,7 @@ public class UberLoggerAppWindow : MonoBehaviour, ILogger
     void Start()
     {
         DontDestroyOnLoad(gameObject);
-        Logger.AddLogger(this);
+        UberLogger.Logger.AddLogger(this);
         ClearSelectedMessage();
         WindowRect = new Rect(0,0, Screen.width/2, Screen.height);
         CurrentTopPaneHeight = Screen.height*SizerStartHeightRatio;
