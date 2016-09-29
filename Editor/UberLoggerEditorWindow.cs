@@ -123,6 +123,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         if(MakeDirty)
         {
             Dirty = true;
+			MakeDirty = false;
             Repaint();
         }
     }
