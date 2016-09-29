@@ -68,6 +68,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         MessageIcon = SmallMessageIcon;
         Dirty = true;
         Repaint();
+
     }
 
 
@@ -77,30 +78,31 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         //Set up the basic style, based on the Unity defaults
         //A bit hacky, but means we don't have to ship an editor guistyle and can fit in to pro and free skins
         Color defaultLineColor = GUI.backgroundColor;
+        GUIStyle unityLogLineEven = null;
+        GUIStyle unityLogLineOdd = null;
+        GUIStyle unitySmallLogLine = null;
+        GUIStyle unityLogLine = null;
         
         foreach(var style in GUI.skin.customStyles)
         {
-            if(style.name=="LODSliderRangeSelected")
-            {
-                SelectedLogLineStyle = new GUIStyle(EditorStyles.label);
-                LogLineStyle = new GUIStyle(EditorStyles.label);
-                SelectedLogLineStyle.margin = new RectOffset(0, 0, 0,0 );
-                SelectedLogLineStyle.normal.background = style.normal.background;
-                SelectedLogLineStyle.active = SelectedLogLineStyle.normal;
-                SelectedLogLineStyle.hover = SelectedLogLineStyle.normal;
-                SelectedLogLineStyle.focused = SelectedLogLineStyle.normal;
-                
-                LogLineStyle.margin = new RectOffset(0, 0, 0,0 );
-                LogLineStyle.normal.background = EditorGUIUtility.whiteTexture;
-                LogLineStyle.active = LogLineStyle.normal;
-                LogLineStyle.hover = LogLineStyle.normal;
-                LogLineStyle.focused = LogLineStyle.normal;
-                break;
-            }
+            if     (style.name=="CN EntryBackEven")  unityLogLineEven = style;
+            else if(style.name=="CN EntryBackOdd")   unityLogLineOdd = style;
+            else if(style.name=="CN StatusInfo")   unitySmallLogLine = style;
+            else if(style.name=="CN EntryInfo")   unityLogLine = style;
         }
 
-        LineColour1 = defaultLineColor;
-        LineColour2 = new Color(defaultLineColor.r*0.9f, defaultLineColor.g*0.9f, defaultLineColor.b*0.9f);
+        EntryStyleBackEven = new GUIStyle(unitySmallLogLine);
+
+        EntryStyleBackEven.normal = unityLogLineEven.normal;
+        EntryStyleBackEven.margin = new RectOffset(0,0,0,0);
+        EntryStyleBackEven.border = new RectOffset(0,0,0,0);
+        EntryStyleBackEven.fixedHeight = 0;
+
+        EntryStyleBackOdd = new GUIStyle(EntryStyleBackEven);
+        EntryStyleBackOdd.normal = unityLogLineOdd.normal;
+        // EntryStyleBackOdd = new GUIStyle(unityLogLine);
+
+
         SizerLineColour = new Color(defaultLineColor.r*0.5f, defaultLineColor.g*0.5f, defaultLineColor.b*0.5f);
 
         // GUILayout.BeginVertical(GUILayout.Height(topPanelHeaderHeight), GUILayout.MinHeight(topPanelHeaderHeight));
@@ -412,15 +414,14 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         {
             var countedLog = RenderLogs[renderLogIndex];
             var log = countedLog.Log;
+            logLineStyle = (renderLogIndex%2==0) ? EntryStyleBackEven : EntryStyleBackOdd;
             if(renderLogIndex==SelectedRenderLog)
             {
-                    logLineStyle = SelectedLogLineStyle;
-                    GUI.backgroundColor = Color.white;
+                GUI.backgroundColor = new Color(0.5f, 0.5f, 1);
             }
             else
             {
-                    logLineStyle = LogLineStyle;
-                    GUI.backgroundColor = (renderLogIndex%2==0) ? LineColour1 : LineColour2;
+                GUI.backgroundColor = Color.white;
             }
                 
             //Make all messages single line
@@ -498,11 +499,15 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             var sourceStyle = new GUIStyle(GUI.skin.textArea);
             sourceStyle.richText = true;
 
+            var drawRect = new Rect(DrawPos, new Vector2(position.width-DrawPos.x, position.height-DrawPos.y));
+
             //Work out the content we need to show, and the sizes
             var detailLines = new List<GUIContent>();
             float contentHeight = 0;
             float contentWidth = 0;
             float lineHeight = 0;
+
+
             for(int c1=0; c1<log.Callstack.Count; c1++)
             {
                 var frame = log.Callstack[c1];
@@ -530,7 +535,6 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             }
 
             //Render the content
-            var drawRect = new Rect(DrawPos, new Vector2(position.width-DrawPos.x, position.height-DrawPos.y));
             var contentRect = new Rect(0, 0, Mathf.Max(contentWidth, drawRect.width), contentHeight);
 
             LogDetailsScrollPosition = GUI.BeginScrollView(drawRect, LogDetailsScrollPosition, contentRect);
@@ -823,6 +827,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 
     GUIStyle LogLineStyle;
     GUIStyle SelectedLogLineStyle;
+    GUIStyle EntryStyleBackEven;
+    GUIStyle EntryStyleBackOdd;
     string CurrentChannel=null;
     string FilterRegex = null;
     bool ShowErrors = true; 
