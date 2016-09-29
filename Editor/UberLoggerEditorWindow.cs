@@ -401,68 +401,69 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         float logLineX = CollapseBadgeMaxWidth;
 
         //Render all the elements
-        // TODO - rather than loop and clip, we should only render the elements we need
-        for(int renderLogIndex=0; renderLogIndex<RenderLogs.Count; renderLogIndex++)
+        int firstRenderLogIndex = (int) (LogListScrollPosition.y/LogListLineHeight);
+        int lastRenderLogIndex = firstRenderLogIndex + (int) (height/LogListLineHeight);
+
+        firstRenderLogIndex = Mathf.Clamp(firstRenderLogIndex, 0, RenderLogs.Count);
+        lastRenderLogIndex = Mathf.Clamp(lastRenderLogIndex, 0, RenderLogs.Count);
+        buttonY = firstRenderLogIndex*LogListLineHeight;
+
+        for(int renderLogIndex=firstRenderLogIndex; renderLogIndex<lastRenderLogIndex; renderLogIndex++)
         {
-            //Clip any elements we don't see
-            if(buttonY+LogListLineHeight > LogListScrollPosition.y && buttonY < LogListScrollPosition.y+height)
+            var countedLog = RenderLogs[renderLogIndex];
+            var log = countedLog.Log;
+            if(renderLogIndex==SelectedRenderLog)
             {
-                var countedLog = RenderLogs[renderLogIndex];
-                var log = countedLog.Log;
-                if(renderLogIndex==SelectedRenderLog)
-                {
                     logLineStyle = SelectedLogLineStyle;
                     GUI.backgroundColor = Color.white;
-                }
-                else
-                {
+            }
+            else
+            {
                     logLineStyle = LogLineStyle;
                     GUI.backgroundColor = (renderLogIndex%2==0) ? LineColour1 : LineColour2;
-                }
+            }
                 
-                //Make all messages single line
-                var content = GetLogLineGUIContent(log, ShowTimes);
-                var drawRect = new Rect(logLineX, buttonY, contentRect.width, LogListLineHeight);
-                if(GUI.Button(drawRect, content, logLineStyle))
+            //Make all messages single line
+            var content = GetLogLineGUIContent(log, ShowTimes);
+            var drawRect = new Rect(logLineX, buttonY, contentRect.width, LogListLineHeight);
+            if(GUI.Button(drawRect, content, logLineStyle))
+            {
+                //Select a message, or jump to source if it's double-clicked
+                if(renderLogIndex==SelectedRenderLog)
                 {
-                    //Select a message, or jump to source if it's double-clicked
-                    if(renderLogIndex==SelectedRenderLog)
+                    if(EditorApplication.timeSinceStartup-LastMessageClickTime<0.3f)
                     {
-                        if(EditorApplication.timeSinceStartup-LastMessageClickTime<0.3f)
+                        LastMessageClickTime = 0;
+                        if(log.Callstack.Count>0)
                         {
-                            LastMessageClickTime = 0;
-                            if(log.Callstack.Count>0)
-                            {
-                                JumpToSource(log.Callstack[0]);
-                            }
-                        }
-                        else
-                        {
-                            LastMessageClickTime = EditorApplication.timeSinceStartup;
+                            JumpToSource(log.Callstack[0]);
                         }
                     }
                     else
                     {
-                        SelectedRenderLog = renderLogIndex;
-                        SelectedCallstackFrame = -1;
+                        LastMessageClickTime = EditorApplication.timeSinceStartup;
                     }
-
-                    //Always select the game object that is the source of this message
-                    var go = log.Source as GameObject;
-                    if(go!=null)
-                    {
-                        Selection.activeGameObject = go;
-                    }
-
                 }
-
-                if(Collapse)
+                else
                 {
-                    var collapseBadgeContent = new GUIContent(countedLog.Count.ToString());
-                    var collapseBadgeSize = collapseBadgeStyle.CalcSize(collapseBadgeContent);
-                    var collapseBadgeRect = new Rect(0, buttonY, collapseBadgeSize.x, collapseBadgeSize.y);
-                    GUI.Button(collapseBadgeRect, collapseBadgeContent, collapseBadgeStyle);
+                    SelectedRenderLog = renderLogIndex;
+                    SelectedCallstackFrame = -1;
                 }
+
+                //Always select the game object that is the source of this message
+                var go = log.Source as GameObject;
+                if(go!=null)
+                {
+                    Selection.activeGameObject = go;
+                }
+            }
+
+            if(Collapse)
+            {
+                var collapseBadgeContent = new GUIContent(countedLog.Count.ToString());
+                var collapseBadgeSize = collapseBadgeStyle.CalcSize(collapseBadgeContent);
+                var collapseBadgeRect = new Rect(0, buttonY, collapseBadgeSize.x, collapseBadgeSize.y);
+                GUI.Button(collapseBadgeRect, collapseBadgeContent, collapseBadgeStyle);
             }
             buttonY += LogListLineHeight;
         }
@@ -470,7 +471,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         //If we're following the log, move to the end
         if(ScrollFollowMessages && RenderLogs.Count>0)
         {
-            LogListScrollPosition.y = (buttonY+LogListLineHeight)-scrollRect.height;
+            LogListScrollPosition.y = ((RenderLogs.Count+1)*LogListLineHeight)-scrollRect.height;
         }
 
         GUI.EndScrollView();
