@@ -23,35 +23,35 @@ public class TestUberLogger : MonoBehaviour
         Debug.LogFormat("Log Format param {0}", "Test");
         Debug.LogFormat(gameObject, "Log Format with GameObject and param {0}", "Test");
 
-        Debug.ULog("ULog");
-        Debug.ULog("ULog with param {0}", "Test");
-        Debug.ULog(gameObject, "ULog with GameObject");
-        Debug.ULog(gameObject, "ULog with GameObject and param {0}", "Test");
+        UberDebug.Log("ULog");
+        UberDebug.Log("ULog with param {0}", "Test");
+        UberDebug.Log(gameObject, "ULog with GameObject");
+        UberDebug.Log(gameObject, "ULog with GameObject and param {0}", "Test");
 
-        Debug.ULogChannel("Test", "ULogChannel");
-        Debug.ULogChannel("Test", "ULogChannel with param {0}", "Test");
-        Debug.ULogChannel(gameObject, "Test", "ULogChannel with GameObject");
-        Debug.ULogChannel(gameObject, "Test", "ULogChannel with GameObject and param {0}", "Test");
+        UberDebug.LogChannel("Test", "ULogChannel");
+        UberDebug.LogChannel("Test", "ULogChannel with param {0}", "Test");
+        UberDebug.LogChannel(gameObject, "Test", "ULogChannel with GameObject");
+        UberDebug.LogChannel(gameObject, "Test", "ULogChannel with GameObject and param {0}", "Test");
 	
-        Debug.ULogWarning("ULogWarning");
-        Debug.ULogWarning("ULogWarning with param {0}", "Test");
-        Debug.ULogWarning(gameObject, "ULogWarning with GameObject");
-        Debug.ULogWarning(gameObject, "ULogWarning with GameObject and param {0}", "Test");
+        UberDebug.LogWarning("ULogWarning");
+        UberDebug.LogWarning("ULogWarning with param {0}", "Test");
+        UberDebug.LogWarning(gameObject, "ULogWarning with GameObject");
+        UberDebug.LogWarning(gameObject, "ULogWarning with GameObject and param {0}", "Test");
 
-        Debug.ULogWarningChannel("Test", "ULogWarningChannel");
-        Debug.ULogWarningChannel("Test", "ULogWarningChannel with param {0}", "Test");
-        Debug.ULogWarningChannel(gameObject, "Test", "ULogWarningChannel with GameObject");
-        Debug.ULogWarningChannel(gameObject, "Test", "ULogWarningChannel with GameObject and param {0}", "Test");
+        UberDebug.LogWarningChannel("Test", "ULogWarningChannel");
+        UberDebug.LogWarningChannel("Test", "ULogWarningChannel with param {0}", "Test");
+        UberDebug.LogWarningChannel(gameObject, "Test", "ULogWarningChannel with GameObject");
+        UberDebug.LogWarningChannel(gameObject, "Test", "ULogWarningChannel with GameObject and param {0}", "Test");
 
-        Debug.ULogError("ULogError");
-        Debug.ULogError("ULogError with param {0}", "Test");
-        Debug.ULogError(gameObject, "ULogError with GameObject");
-        Debug.ULogError(gameObject, "ULogError with GameObject and param {0}", "Test");
+        UberDebug.LogError("ULogError");
+        UberDebug.LogError("ULogError with param {0}", "Test");
+        UberDebug.LogError(gameObject, "ULogError with GameObject");
+        UberDebug.LogError(gameObject, "ULogError with GameObject and param {0}", "Test");
 
-        Debug.ULogErrorChannel("Test", "ULogErrorChannel");
-        Debug.ULogErrorChannel("Test", "ULogErrorChannel with param {0}", "Test");
-        Debug.ULogErrorChannel(gameObject, "Test", "ULogErrorChannel with GameObject");
-        Debug.ULogErrorChannel(gameObject, "Test", "ULogErrorChannel with GameObject and param {0}", "Test");
+        UberDebug.LogErrorChannel("Test", "ULogErrorChannel");
+        UberDebug.LogErrorChannel("Test", "ULogErrorChannel with param {0}", "Test");
+        UberDebug.LogErrorChannel(gameObject, "Test", "ULogErrorChannel with GameObject");
+        UberDebug.LogErrorChannel(gameObject, "Test", "ULogErrorChannel with GameObject and param {0}", "Test");
     }
 	
 	// Update is called once per frame
