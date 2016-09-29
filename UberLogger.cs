@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System;
+using System.Text.RegularExpressions;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -37,7 +38,6 @@ namespace UberLogger
         void Log(LogInfo logInfo);
     }
     
-
     //Information about a particular frame of a callstack
     [System.Serializable]
     public class LogStackFrame
@@ -196,6 +196,7 @@ namespace UberLogger
         static LinkedList<LogInfo> RecentMessages = new LinkedList<LogInfo>();
         static double StartTime;
         static bool AlreadyLogging = false;
+        static Regex UnityMessageRegex;
 
         static Logger()
         {
@@ -206,6 +207,7 @@ namespace UberLogger
             Application.RegisterLogCallback(UnityLogHandler);
 #endif
             StartTime = GetTime();
+            UnityMessageRegex = new Regex(@"(.*)\((\d+).*\)");
         }
 
         /// <summary>
@@ -257,7 +259,7 @@ namespace UberLogger
         static public bool ExtractInfoFromUnityMessage(string log, ref string filename, ref int lineNumber)
         {
             // log = "Assets/Code/Debug.cs(140,21): warning CS0618: 'some error'
-            var match = System.Text.RegularExpressions.Regex.Matches(log, @"(.*)\((\d+).*\)");
+            var match = UnityMessageRegex.Matches(log);
 
             if(match.Count>0)
             {
