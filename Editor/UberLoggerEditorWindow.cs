@@ -315,7 +315,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         }
 
         var collapseBadgeStyle = EditorStyles.miniButton;
-        var logLineStyle = new GUIStyle(LogLineStyle);
+        var logLineStyle = EntryStyleBackEven;
 
         // If we've been marked dirty, we need to recalculate the elements to be displayed
         if(Dirty)
@@ -355,7 +355,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 {
                     var content = GetLogLineGUIContent(countedLog.Log, ShowTimes);
                     RenderLogs.Add(countedLog);
-                    var logLineSize = LogLineStyle.CalcSize(content);
+                    var logLineSize = logLineStyle.CalcSize(content);
                     LogListMaxWidth = Mathf.Max(LogListMaxWidth, logLineSize.x);
                     LogListLineHeight = Mathf.Max(LogListLineHeight, logLineSize.y);
 
@@ -373,7 +373,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                     {
                         var content = GetLogLineGUIContent(log, ShowTimes);
                         RenderLogs.Add(new CountedLog(log, 1));
-                        var logLineSize = LogLineStyle.CalcSize(content);
+                        var logLineSize = logLineStyle.CalcSize(content);
                         LogListMaxWidth = Mathf.Max(LogListMaxWidth, logLineSize.x);
                         LogListLineHeight = Mathf.Max(LogListLineHeight, logLineSize.y);
                     }
@@ -494,7 +494,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         {
             var countedLog = RenderLogs[SelectedRenderLog];
             var log = countedLog.Log;
-            var logLineStyle = LogLineStyle;
+            var logLineStyle = EntryStyleBackEven;
 
             var sourceStyle = new GUIStyle(GUI.skin.textArea);
             sourceStyle.richText = true;
@@ -545,15 +545,14 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 var lineContent = detailLines[c1];
                 if(lineContent!=null)
                 {
+                    logLineStyle = (c1%2==0) ? EntryStyleBackEven : EntryStyleBackOdd;
                     if(c1==SelectedCallstackFrame)
                     {
-                        GUI.backgroundColor = Color.white;
-                        logLineStyle = SelectedLogLineStyle;
+                        GUI.backgroundColor = new Color(0.5f, 0.5f, 1);
                     }
                     else
                     {
-                        GUI.backgroundColor = (c1%2==0) ? LineColour1 : LineColour2;
-                        logLineStyle = LogLineStyle;
+                        GUI.backgroundColor = Color.white;
                     }
                     
                     var frame = log.Callstack[c1];
@@ -592,6 +591,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                     //Show the source code if needed
                     if(ShowFrameSource && c1==SelectedCallstackFrame)
                     {
+                        GUI.backgroundColor = Color.white;
+
                         var sourceContent = GetFrameSourceGUIContent(frame);
                         if(sourceContent!=null)
                         {
@@ -821,12 +822,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     UberLoggerEditor EditorLogger;
 
     //Standard unity pro colours
-    Color LineColour1;
-    Color LineColour2;
     Color SizerLineColour;
 
-    GUIStyle LogLineStyle;
-    GUIStyle SelectedLogLineStyle;
     GUIStyle EntryStyleBackEven;
     GUIStyle EntryStyleBackOdd;
     string CurrentChannel=null;
