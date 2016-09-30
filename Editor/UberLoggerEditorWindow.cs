@@ -80,14 +80,12 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         GUIStyle unityLogLineEven = null;
         GUIStyle unityLogLineOdd = null;
         GUIStyle unitySmallLogLine = null;
-        GUIStyle unityLogLine = null;
         
         foreach(var style in GUI.skin.customStyles)
         {
             if     (style.name=="CN EntryBackEven")  unityLogLineEven = style;
             else if(style.name=="CN EntryBackOdd")   unityLogLineOdd = style;
             else if(style.name=="CN StatusInfo")   unitySmallLogLine = style;
-            else if(style.name=="CN EntryInfo")   unityLogLine = style;
         }
 
         EntryStyleBackEven = new GUIStyle(unitySmallLogLine);
