@@ -96,7 +96,6 @@ public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
             Channels.Add(logInfo.Channel);
         }
 
-        ProcessOnStartClear();
         LogInfo.Add(logInfo);
         if(logInfo.Severity==LogSeverity.Error)
         {
