@@ -1,16 +1,36 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Threading;
 
 public class TestUberLogger : MonoBehaviour
 {
+    Thread TestThread;
     // Use this for initialization
     void Start ()
     {
         UberLogger.Logger.AddLogger(new UberLoggerFile("UberLogger.log"), false);
         DoTest();
+        TestThread = new Thread(new ThreadStart(TestThreadEntry));
+        TestThread.Start();
+
+        //Test an internal .Net OOB error
         var t = new List<int>();
         t[0] = 5;
+    }
 
+    void OnDestroy()
+    {
+        TestThread.Abort();
+        TestThread.Join();
+    }
+    void TestThreadEntry()
+    {
+        for(;;)
+        {
+            Debug.Log("Thread Log Message");
+            UberDebug.Log("Thread ULog Message");
+            Thread.Sleep(100);
+        }
     }
 
     public void DoTest()
@@ -54,8 +74,9 @@ public class TestUberLogger : MonoBehaviour
     }
 	
 	// Update is called once per frame
-    void Update () {
-        DoTest();
+    void Update ()
+    {
+        // DoTest();
     }
 }
 

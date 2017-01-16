@@ -201,7 +201,8 @@ namespace UberLogger
         {
             // Register with Unity's logging system
 #if UNITY_5
-            Application.logMessageReceived += UnityLogHandler;
+            UberDebug.UnityLog("Register");
+            Application.logMessageReceivedThreaded += UnityLogHandler;
 #else
             Application.RegisterLogCallback(UnityLogHandler);
 #endif
