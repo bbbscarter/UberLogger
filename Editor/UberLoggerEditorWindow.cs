@@ -647,7 +647,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         var filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), frame.FileName);
         if (System.IO.File.Exists(filename))
         {
-            UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(frame.FileName, frame.LineNumber);
+            string relPath = filename.Substring(Application.dataPath.Length - "Assets".Length).Replace("\\", "/");
+            AssetDatabase.OpenAsset(AssetDatabase.LoadAssetAtPath<TextAsset>(relPath), frame.LineNumber);
         }
     }
 
