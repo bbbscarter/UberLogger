@@ -30,7 +30,17 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     public void OnLogChange(LogInfo logInfo)
     {
         Dirty = true;
-        Repaint();
+        // Repaint();
+    }
+
+    
+    void OnInspectorUpdate()
+    {
+        // Debug.Log("Update");
+        if(Dirty)
+        {
+            Repaint();
+        }
     }
 
     void OnEnable()
@@ -112,7 +122,12 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 
         float logPanelHeight = CurrentTopPaneHeight-DrawPos.y;
         
+        if(Dirty)
+        {
+            CurrentLogList = EditorLogger.CopyLogInfo();
+        }
         DrawLogList(logPanelHeight);
+
         DrawPos.y += DividerHeight;
 
         DrawLogDetails();
@@ -328,7 +343,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 var collapsedLines = new Dictionary<string, CountedLog>();
                 var collapsedLinesList = new List<CountedLog>();
 
-                foreach(var log in EditorLogger.LogInfo)
+                foreach(var log in CurrentLogList)
                 {
                     if(ShouldShowLog(filterRegex, log))
                     {
@@ -364,7 +379,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             //If we're not collapsed, display everything in order
             else
             {
-                foreach(var log in EditorLogger.LogInfo)
+                foreach(var log in CurrentLogList)
                 {
                     if(ShouldShowLog(filterRegex, log))
                     {
@@ -485,7 +500,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     public void DrawLogDetails()
     {
         var oldColor = GUI.backgroundColor;
-        SelectedRenderLog = Mathf.Clamp(SelectedRenderLog, 0, EditorLogger.LogInfo.Count);
+
+        SelectedRenderLog = Mathf.Clamp(SelectedRenderLog, 0, CurrentLogList.Count);
 
         if(RenderLogs.Count>0 && SelectedRenderLog>=0)
         {
@@ -685,7 +701,12 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 
     List<string> GetChannels()
     {
-        var categories = EditorLogger.Channels;
+        if(Dirty)
+        {
+            CurrentChannels = EditorLogger.CopyChannels();
+        }
+
+        var categories = CurrentChannels;
         
         var channelList = new List<string>();
         channelList.Add("All");
@@ -817,6 +838,9 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     //Serialise the logger field so that Unity doesn't forget about the logger when you hit Play
     [UnityEngine.SerializeField]
     UberLoggerEditor EditorLogger;
+
+    List<UberLogger.LogInfo> CurrentLogList = new List<UberLogger.LogInfo>();
+    HashSet<string> CurrentChannels = new HashSet<string>();
 
     //Standard unity pro colours
     Color SizerLineColour;

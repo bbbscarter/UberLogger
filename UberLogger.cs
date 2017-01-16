@@ -201,7 +201,8 @@ namespace UberLogger
         {
             // Register with Unity's logging system
 #if UNITY_5
-            Application.logMessageReceived += UnityLogHandler;
+            UberDebug.UnityLog("Register");
+            Application.logMessageReceivedThreaded += UnityLogHandler;
 #else
             Application.RegisterLogCallback(UnityLogHandler);
 #endif
@@ -221,7 +222,10 @@ namespace UberLogger
         static public double GetTime()
         {
 #if UNITY_EDITOR
-            return EditorApplication.timeSinceStartup - StartTime;
+            // return EditorApplication.timeSinceStartup - StartTime;
+            // return DateTime.Now.Ticks - StartTime;
+            double time = DateTime.Now.Ticks/10000000.0;
+            return time - StartTime;
 #else
             double time = Time.time;
             return time - StartTime;

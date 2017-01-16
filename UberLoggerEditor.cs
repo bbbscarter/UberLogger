@@ -15,10 +15,15 @@ using UberLogger;
 [System.Serializable]
 public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
 {
-    public List<LogInfo> LogInfo = new List<LogInfo>();
+    List<LogInfo> LogInfo = new List<LogInfo>();
+    HashSet<string> Channels = new HashSet<string>();
+
     public bool PauseOnError = false;
     public bool ClearOnPlay = true;
     public bool WasPlaying = false;
+    public int NoErrors;
+    public int NoWarnings;
+    public int NoMessages;
 
     static public UberLoggerEditor Create()
     {
@@ -64,10 +69,6 @@ public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
         ProcessOnStartClear();
     }
 
-    public int NoErrors;
-    public int NoWarnings;
-    public int NoMessages;
-    public HashSet<string> Channels = new HashSet<string>();
 
     /// <summary>
     /// Interface for deriving new logger backends.
@@ -89,15 +90,19 @@ public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
             Windows.Add(window);
         }
     }
+
     public void Log(LogInfo logInfo)
     {
-        if(!String.IsNullOrEmpty(logInfo.Channel) && !Channels.Contains(logInfo.Channel))
+        lock(this)
         {
-            Channels.Add(logInfo.Channel);
+            if(!String.IsNullOrEmpty(logInfo.Channel) && !Channels.Contains(logInfo.Channel))
+            {
+                Channels.Add(logInfo.Channel);
+            }
+
+            LogInfo.Add(logInfo);
         }
 
-        ProcessOnStartClear();
-        LogInfo.Add(logInfo);
         if(logInfo.Severity==LogSeverity.Error)
         {
             NoErrors++;
@@ -124,18 +129,37 @@ public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
 
     public void Clear()
     {
-        LogInfo.Clear();
-        Channels.Clear();
-        NoWarnings = 0;
-        NoErrors = 0;
-        NoMessages = 0;
-
-        foreach(var window in Windows)
+        lock(this)
         {
-            window.OnLogChange(null);
+            LogInfo.Clear();
+            Channels.Clear();
+            NoWarnings = 0;
+            NoErrors = 0;
+            NoMessages = 0;
+
+            foreach(var window in Windows)
+            {
+                window.OnLogChange(null);
+            }
         }
-        
     }
+
+    public List<LogInfo> CopyLogInfo()
+    {
+        lock(this)
+        {
+            return new List<LogInfo>(LogInfo);
+        }
+    }
+
+    public HashSet<string> CopyChannels()
+    {
+        lock(this)
+        {
+            return new HashSet<string>(Channels);
+        }
+    }
+
 }
 
 #endif
