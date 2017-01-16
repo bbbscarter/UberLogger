@@ -102,7 +102,7 @@ public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
 
             LogInfo.Add(logInfo);
         }
-
+        
         if(logInfo.Severity==LogSeverity.Error)
         {
             NoErrors++;

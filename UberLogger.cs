@@ -193,7 +193,7 @@ namespace UberLogger
 
         static List<ILogger> Loggers = new List<ILogger>();
         static LinkedList<LogInfo> RecentMessages = new LinkedList<LogInfo>();
-        static double StartTime;
+        static long StartTick;
         static bool AlreadyLogging = false;
         static Regex UnityMessageRegex;
 
@@ -206,7 +206,7 @@ namespace UberLogger
 #else
             Application.RegisterLogCallback(UnityLogHandler);
 #endif
-            StartTime = GetTime();
+            StartTick = DateTime.Now.Ticks;
             UnityMessageRegex = new Regex(@"(.*)\((\d+).*\)");
         }
 
@@ -221,15 +221,8 @@ namespace UberLogger
     
         static public double GetTime()
         {
-#if UNITY_EDITOR
-            // return EditorApplication.timeSinceStartup - StartTime;
-            // return DateTime.Now.Ticks - StartTime;
-            double time = DateTime.Now.Ticks/10000000.0;
-            return time - StartTime;
-#else
-            double time = Time.time;
-            return time - StartTime;
-#endif
+            long ticks = DateTime.Now.Ticks;
+            return TimeSpan.FromTicks(ticks - StartTick).TotalSeconds;
         }
 
         /// <summary>
