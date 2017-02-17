@@ -647,11 +647,14 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 
     bool JumpToSource(LogStackFrame frame)
     {
-        var filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), frame.FileName);
-        if (System.IO.File.Exists(filename))
+        if (frame.FileName != null)
         {
-            if (UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(frame.FileName, frame.LineNumber))
-                return true;
+            var filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), frame.FileName);
+            if (System.IO.File.Exists(filename))
+            {
+                if (UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(frame.FileName, frame.LineNumber))
+                    return true;
+            }
         }
 
         return false;
