@@ -328,7 +328,15 @@ namespace UberLogger
         /// </summary>
         static List<LogStackFrame> GetCallstackFromUnityLog(string unityCallstack)
         {
-            var lines = System.Text.RegularExpressions.Regex.Split(unityCallstack, System.Environment.NewLine); 
+            // First, split lines using OS-native line ending
+            var lines = System.Text.RegularExpressions.Regex.Split(unityCallstack, System.Environment.NewLine);
+
+            // Unity 5.5 on Windows (and probably all versions on all OSes) appear to use \n hardcoded when concatenating callstacks
+            // The above Split() operation will return the original string unaffected not do anything on Unity 5.5/Windows
+            // Therefore, if the split operation had no effect we try again with \n hardcoded
+            if (lines.Length == 1 && lines[0] == unityCallstack)
+                lines = System.Text.RegularExpressions.Regex.Split(unityCallstack, "\n");
+
             var stack = new List<LogStackFrame>();
             foreach(var line in lines)
             {
