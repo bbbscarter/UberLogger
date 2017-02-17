@@ -447,9 +447,12 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                     if(EditorApplication.timeSinceStartup-LastMessageClickTime<0.3f)
                     {
                         LastMessageClickTime = 0;
-                        if(log.Callstack.Count>0)
+                        // Attempt to display source code associated with messages. Search through all stackframes,
+                        //   until we find a stackframe that can be displayed in source code view
+                        for (int frame = 0; frame < log.Callstack.Count; frame++)
                         {
-                            JumpToSource(log.Callstack[0]);
+                            if (JumpToSource(log.Callstack[frame]))
+                                break;
                         }
                     }
                     else
@@ -642,13 +645,16 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         ShowFrameSource = !ShowFrameSource;
     }
 
-    void JumpToSource(LogStackFrame frame)
+    bool JumpToSource(LogStackFrame frame)
     {
         var filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), frame.FileName);
         if (System.IO.File.Exists(filename))
         {
-            UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(frame.FileName, frame.LineNumber);
+            if (UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(frame.FileName, frame.LineNumber))
+                return true;
         }
+
+        return false;
     }
 
     GUIContent GetFrameSourceGUIContent(LogStackFrame frame)
