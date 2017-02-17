@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 #if UNITY_EDITOR
@@ -286,9 +287,67 @@ namespace UberLogger
             return false;
         }
 
+
+
+        struct IgnoredUnityMethod
+        {
+            public enum Mode { Show, ShowIfFirstIgnoredMethod, Hide };
+            public string DeclaringTypeName;
+            public string MethodName;
+            public Mode ShowHideMode;
+        }
+
+        // Example callstack when invoking Debug.LogWarning under Unity 5.5:
+        //   Application.CallLogCallback
+        //   DebugLogHandler.Internal_Log
+        //   DebugLogHandler.LogFormat
+        //   Logger.Log
+        //   Debug.LogWarning
+        //   <application callstack>
+
+
+        static IgnoredUnityMethod[] IgnoredUnityMethods = new IgnoredUnityMethod[]
+        {
+            // Internal trampoline, which invokes UberLogger's log callback
+            new IgnoredUnityMethod { DeclaringTypeName = "Application", MethodName = "CallLogCallback", ShowHideMode = IgnoredUnityMethod.Mode.Hide },
+
+            // Internal log-handling methods in Unity
+            new IgnoredUnityMethod { DeclaringTypeName = "DebugLogHandler", MethodName = null, ShowHideMode = IgnoredUnityMethod.Mode.Hide },
+            new IgnoredUnityMethod { DeclaringTypeName = "Logger", MethodName = "Log", ShowHideMode = IgnoredUnityMethod.Mode.Hide },
+
+            // Many of the Debug.* entry points result in log messages being printed
+            // These are helpful to have on the callstack in case source code is not available (they help pinpoint the exact source code location that printed the message),
+            //   but remaining ignored methods can safely be hidden
+            new IgnoredUnityMethod { DeclaringTypeName = "Debug", MethodName = null, ShowHideMode = IgnoredUnityMethod.Mode.ShowIfFirstIgnoredMethod },
+
+            // Many of the Assert.* entry points result in log messages being printed
+            // These are not helpful having on the callstack
+            // These are helpful to have on the callstack in case source code is not available (they help pinpoint the exact source code location that printed the message),
+            //   but remaining ignored methods can safely be hidden
+            new IgnoredUnityMethod { DeclaringTypeName = "Assert", MethodName = null, ShowHideMode = IgnoredUnityMethod.Mode.ShowIfFirstIgnoredMethod  },
+        };
+
+        /// <summary>
+        /// Identify a number of Unity methods which we would like to scrub from a stacktrace
+        /// Returns true if the method is part of scrubbing
+        /// </summary>
+        static IgnoredUnityMethod.Mode ShowOrHideMethod(MethodBase method)
+        {
+            foreach (IgnoredUnityMethod ignoredUnityMethod in IgnoredUnityMethods)
+            {
+                if ((method.DeclaringType.Name == ignoredUnityMethod.DeclaringTypeName) && ((ignoredUnityMethod.MethodName == null) || (method.Name == ignoredUnityMethod.MethodName)))
+                {
+                    return ignoredUnityMethod.ShowHideMode;
+                }
+            }
+
+            return IgnoredUnityMethod.Mode.Show;
+        }
+
         /// <summary>
         /// Converts the curent stack trace into a list of UberLogger's LogStackFrame.
         /// Excludes any methods with the StackTraceIgnore attribute
+        /// Excludes all methods (bar the first, sometimes) from a pre-defined list of ignored Unity methods/classes
         /// Returns false if the stack frame contains any methods flagged as LogUnityOnly
         /// </summary>
         [StackTraceIgnore]
@@ -298,8 +357,13 @@ namespace UberLogger
             StackTrace stackTrace = new StackTrace(true);           // get call stack
             StackFrame[] stackFrames = stackTrace.GetFrames();  // get method calls (frames)
 
-            foreach (StackFrame stackFrame in stackFrames)
+            bool encounteredIgnoredMethodPreviously = false;
+
+            // Iterate backwards over stackframes; this enables us to show the "first" ignored Unity method if need be, but hide subsequent ones
+            for (int i = stackFrames.Length - 1; i >= 0; i--)
             {
+                StackFrame stackFrame = stackFrames[i];
+
                 var method = stackFrame.GetMethod();
                 if(method.IsDefined(typeof(LogUnityOnly), true))
                 {
@@ -307,17 +371,31 @@ namespace UberLogger
                 }
                 if(!method.IsDefined(typeof(StackTraceIgnore), true))
                 {
-                    //Cut out some internal noise from Unity stuff
-                    if(!(method.Name=="CallLogCallback" && method.DeclaringType.Name=="Application")
-                    && !(method.DeclaringType.Name=="Debug" && (method.Name=="Internal_Log" || method.Name=="Log")))
+                    IgnoredUnityMethod.Mode showHideMode = ShowOrHideMethod(method);
+
+                    if (showHideMode == IgnoredUnityMethod.Mode.ShowIfFirstIgnoredMethod)
+                    {
+                        // "show if first ignored" methods are part of the stack trace only if no other ignored methods have been encountered already
+                        if (!encounteredIgnoredMethodPreviously)
+                        {
+                            encounteredIgnoredMethodPreviously = true;
+                            showHideMode = IgnoredUnityMethod.Mode.Show;
+                        }
+                        else
+                            showHideMode = IgnoredUnityMethod.Mode.Hide;
+                    }
+
+                    if (showHideMode == IgnoredUnityMethod.Mode.Show)
                     {
                         var logStackFrame = new LogStackFrame(stackFrame);
                         
                         callstack.Add(logStackFrame);
-                        
                     }
                 }
-            } 
+            }
+
+            // Callstack has been processed backwards -- correct order for presentation
+            callstack.Reverse();
         
             return false;
         }
