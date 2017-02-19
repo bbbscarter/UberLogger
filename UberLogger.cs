@@ -383,6 +383,7 @@ namespace UberLogger
                         switch(logType)
                         {
                             case UnityEngine.LogType.Error: severity = LogSeverity.Error; break;
+                            case UnityEngine.LogType.Assert: severity = LogSeverity.Error; break;
                             case UnityEngine.LogType.Exception: severity = LogSeverity.Error; break;
                             case UnityEngine.LogType.Warning: severity = LogSeverity.Warning; break;
                             default: severity = LogSeverity.Message; break;
