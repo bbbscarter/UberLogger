@@ -444,7 +444,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 //Select a message, or jump to source if it's double-clicked
                 if(renderLogIndex==SelectedRenderLog)
                 {
-                    if(EditorApplication.timeSinceStartup-LastMessageClickTime<0.3f)
+                    if(EditorApplication.timeSinceStartup-LastMessageClickTime<DoubleClickInterval)
                     {
                         LastMessageClickTime = 0;
                         // Attempt to display source code associated with messages. Search through all stackframes,
@@ -464,7 +464,9 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 {
                     SelectedRenderLog = renderLogIndex;
                     SelectedCallstackFrame = -1;
+                    LastMessageClickTime = EditorApplication.timeSinceStartup;
                 }
+
 
                 //Always select the game object that is the source of this message
                 var go = log.Source as GameObject;
@@ -586,7 +588,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                             }
                             else
                             {
-                                if(EditorApplication.timeSinceStartup-LastFrameClickTime<0.3f)
+                                if(EditorApplication.timeSinceStartup-LastFrameClickTime<DoubleClickInterval)
                                 {
                                     LastFrameClickTime = 0;
                                     JumpToSource(frame);
@@ -601,6 +603,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                         else
                         {
                             SelectedCallstackFrame = c1;
+                            LastFrameClickTime = EditorApplication.timeSinceStartup;
                         }
                     }
                     lineY += lineHeight;
@@ -843,6 +846,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     double LastMessageClickTime = 0;
     double LastFrameClickTime = 0;
 
+    const double DoubleClickInterval = 0.3f;
 
     //Serialise the logger field so that Unity doesn't forget about the logger when you hit Play
     [UnityEngine.SerializeField]
