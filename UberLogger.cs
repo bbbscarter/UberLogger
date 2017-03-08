@@ -191,6 +191,11 @@ namespace UberLogger
         // Useful if you want to use both systems
         public static bool ForwardMessages = true;
 
+        // Unity uses \n for line termination in internal multi-line strings. Use this instead of
+        //  System.Environment.NewLine when you want to split multi-line strings which are emitted
+        //  by Unity's internal APIs.
+        public static string UnityInternalNewLine = "\n";
+	
         static List<ILogger> Loggers = new List<ILogger>();
         static LinkedList<LogInfo> RecentMessages = new LinkedList<LogInfo>();
         static long StartTick;
@@ -328,14 +333,7 @@ namespace UberLogger
         /// </summary>
         static List<LogStackFrame> GetCallstackFromUnityLog(string unityCallstack)
         {
-            // First, split lines using OS-native line ending
-            var lines = System.Text.RegularExpressions.Regex.Split(unityCallstack, System.Environment.NewLine);
-
-            // Unity 5.5 on Windows (and probably all versions on all OSes) appear to use \n hardcoded when concatenating callstacks
-            // The above Split() operation will return the original string unaffected not do anything on Unity 5.5/Windows
-            // Therefore, if the split operation had no effect we try again with \n hardcoded
-            if (lines.Length == 1 && lines[0] == unityCallstack)
-                lines = System.Text.RegularExpressions.Regex.Split(unityCallstack, "\n");
+            var lines = System.Text.RegularExpressions.Regex.Split(unityCallstack, UberLogger.Logger.UnityInternalNewLine);
 
             var stack = new List<LogStackFrame>();
             foreach(var line in lines)

@@ -299,7 +299,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     {
         var showMessage = log.Message;
         //Make all messages single line
-        showMessage = showMessage.Replace(System.Environment.NewLine, " ");
+        showMessage = showMessage.Replace(UberLogger.Logger.UnityInternalNewLine, " ");
         if(showTimes)
         {
             showMessage = log.GetTimeStampAsString() + ": " + showMessage; 

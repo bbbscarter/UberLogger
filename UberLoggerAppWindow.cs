@@ -290,7 +290,7 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
                     var showMessage = log.Message;
 
                     //Make all messages single line
-                    showMessage = showMessage.Replace(System.Environment.NewLine, " ");
+                    showMessage = showMessage.Replace(UberLogger.Logger.UnityInternalNewLine, " ");
                     if(ShowTimes)
                     {
                         showMessage = log.GetTimeStampAsString() + ": " + showMessage; 
