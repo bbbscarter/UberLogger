@@ -6,13 +6,13 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void Log(UnityEngine.Object context, string message, params object[] par)
     {
-        UberLogger.Logger.Log("", context, LogSeverity.Warning, message, par);
+        UberLogger.Logger.Log("", context, LogSeverity.Message, message, par);
     }
 
     [StackTraceIgnore]
     static public void Log(string message, params object[] par)
     {
-        UberLogger.Logger.Log("", null, LogSeverity.Warning, message, par);
+        UberLogger.Logger.Log("", null, LogSeverity.Message, message, par);
     }
 
     [StackTraceIgnore]
