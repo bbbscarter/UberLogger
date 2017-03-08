@@ -313,7 +313,11 @@ namespace UberLogger
 
             // Internal log-handling methods in Unity
             new IgnoredUnityMethod { DeclaringTypeName = "DebugLogHandler", MethodName = null, ShowHideMode = IgnoredUnityMethod.Mode.Hide },
-            new IgnoredUnityMethod { DeclaringTypeName = "Logger", MethodName = "Log", ShowHideMode = IgnoredUnityMethod.Mode.Hide },
+
+            // There are several entry points to Logger. These are primarily called by Unity's own code, but could also be called directly by 3rd party code.
+            // These are helpful to have on the callstack in case source code is not available (they help pinpoint the exact source code location that printed the message),
+            //   but remaining ignored methods can safely be hidden
+            new IgnoredUnityMethod { DeclaringTypeName = "Logger", MethodName = null, ShowHideMode = IgnoredUnityMethod.Mode.ShowIfFirstIgnoredMethod },
 
             // Many of the Debug.* entry points result in log messages being printed
             // These are helpful to have on the callstack in case source code is not available (they help pinpoint the exact source code location that printed the message),
