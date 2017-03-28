@@ -648,20 +648,11 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         ShowFrameSource = !ShowFrameSource;
     }
 
-    /// <summary>
-    /// Paths provided by Unity will contain forward slashes as directory separators on all OSes.
-    /// This method changes all forward slashes to OS-specific directory separators.
-    /// </summary>
-    string ConvertDirectorySeparatorsFromUnityToOS(string unityFileName)
-    {
-        return unityFileName.Replace('/', System.IO.Path.DirectorySeparatorChar);
-    }
-
     bool JumpToSource(LogStackFrame frame)
     {
         if (frame.FileName != null)
         {
-            var osFileName = ConvertDirectorySeparatorsFromUnityToOS(frame.FileName);
+            var osFileName = UberLogger.Logger.ConvertDirectorySeparatorsFromUnityToOS(frame.FileName);
             var filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), osFileName);
             if (System.IO.File.Exists(filename))
             {
@@ -791,7 +782,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             return "";
         }
 
-        var osFileName = ConvertDirectorySeparatorsFromUnityToOS(frame.FileName);
+        var osFileName = UberLogger.Logger.ConvertDirectorySeparatorsFromUnityToOS(frame.FileName);
         var filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), osFileName);
         if (!System.IO.File.Exists(filename))
         {
