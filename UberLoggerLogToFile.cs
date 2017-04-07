@@ -20,11 +20,13 @@ public class UberLoggerLogToFile : MonoBehaviour
             UberLogger.Logger.AddLogger(uberLoggerFile);
         }
 
-        // Create a logger that writes to dataPath
+#if !UNITY_EDITOR
+        // If running a separately-built executable, also create a logger that writes to dataPath
         // The file location is easy for people to find, but sometimes the location is read-only
         {
             UberLoggerStructuredFile uberLoggerFile = new UberLoggerStructuredFile(System.IO.Path.Combine(Application.dataPath, OutputFile), Indentation);
             UberLogger.Logger.AddLogger(uberLoggerFile);
         }
+#endif
     }
 }
