@@ -656,7 +656,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             var filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), osFileName);
             if (System.IO.File.Exists(filename))
             {
-                if (UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(osFileName, frame.LineNumber))
+                if (UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(filename, frame.LineNumber))
                     return true;
             }
         }
