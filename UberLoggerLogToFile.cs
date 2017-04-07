@@ -13,7 +13,18 @@ public class UberLoggerLogToFile : MonoBehaviour
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
-        UberLoggerStructuredFile uberLoggerFile = new UberLoggerStructuredFile(OutputFile, Indentation);
-        UberLogger.Logger.AddLogger(uberLoggerFile);
+
+        // Create a logger that writes to persistentDataPath
+        {
+            UberLoggerStructuredFile uberLoggerFile = new UberLoggerStructuredFile(System.IO.Path.Combine(Application.persistentDataPath, OutputFile), Indentation);
+            UberLogger.Logger.AddLogger(uberLoggerFile);
+        }
+
+        // Create a logger that writes to dataPath
+        // The file location is easy for people to find, but sometimes the location is read-only
+        {
+            UberLoggerStructuredFile uberLoggerFile = new UberLoggerStructuredFile(System.IO.Path.Combine(Application.dataPath, OutputFile), Indentation);
+            UberLogger.Logger.AddLogger(uberLoggerFile);
+        }
     }
 }
