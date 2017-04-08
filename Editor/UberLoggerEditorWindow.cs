@@ -655,8 +655,10 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             var filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), frame.FileName);
             if (System.IO.File.Exists(filename))
             {
-                if (UnityEditorInternal.InternalEditorUtility.OpenFileAtLineExternal(frame.FileName, frame.LineNumber))
-                    return true;
+                string s = "/"+frame.FileName.Replace("\\","/");
+                var pos = s.LastIndexOf("/Assets/");
+                var asset = AssetDatabase.LoadAssetAtPath(s.Substring(pos+1),typeof(UnityEngine.Object));
+                if (AssetDatabase.OpenAsset(asset,frame.LineNumber)) return true;
             }
         }
 
