@@ -17,6 +17,12 @@ public class UberLoggerStructuredFile : UberLogger.ILogger
         Always
     }
 
+    public enum ExistingFileMode
+    {
+        Overwrite,
+        DoNotOverwrite
+    };
+
     private StreamWriter LogFileWriter;
     private IncludeCallstackMode IncludeCallStacks;
 
@@ -44,14 +50,28 @@ public class UberLoggerStructuredFile : UberLogger.ILogger
     /// <param name="fileLogPath">Output file name (absolute path)</param>
     /// <param name="indentationSettings">Provide tab settings to get an output that uses tabs to align fields above each other visually. Pass null to always have 1 tab between columns.</param>
     /// <param name="includeCallStacks">When to show callstacks in log; never, only for warnings/errors, or always</param>
+    /// <param name="existingFileMode">If set to Overwrite, overwrite existing log file; if set to DoNotOverwrite, add suffixes (.1 .2 etc) until an unused file name is found</param>
     /// </summary>
-    public UberLoggerStructuredFile(string fileLogPath, IndentationSettings indentation, IncludeCallstackMode includeCallStacks = IncludeCallstackMode.WarningsAndErrorsOnly)
+    public UberLoggerStructuredFile(string fileLogPath, IndentationSettings indentation, IncludeCallstackMode includeCallStacks = IncludeCallstackMode.WarningsAndErrorsOnly, ExistingFileMode existingFileHandling = ExistingFileMode.Overwrite)
     {
         IncludeCallStacks = includeCallStacks;
         Indentation = indentation;
 
-        Debug.Log("Initialising file logging to " + fileLogPath);
-        LogFileWriter = new StreamWriter(fileLogPath, false);
+        string fileLogPathWithCount = fileLogPath;
+        if (existingFileHandling != ExistingFileMode.Overwrite)
+        {
+            // Look for the first nonexistent suitable file name 
+            // Note, this poses a race condition if starting two clients on the same machine
+            int suffixCounter = 0;
+            while (System.IO.File.Exists(fileLogPathWithCount))
+            {
+                suffixCounter++;
+                fileLogPathWithCount = fileLogPath + "." + suffixCounter;
+            }
+        }
+
+        Debug.Log("Initialising file logging to " + fileLogPathWithCount);
+        LogFileWriter = new StreamWriter(fileLogPathWithCount, false);
         LogFileWriter.AutoFlush = true;
     }
 

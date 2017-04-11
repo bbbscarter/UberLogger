@@ -51,4 +51,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b33767a885a7004e909ebc0fc1ee560, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outputFile: output_log_structured.txt
+  OutputFile: output_log_structured.txt
+  Indentation:
+    TabSize: 8
+    TimeMinTabs: 4
+    MessageMinTabs: 16
+    ChannelMinTabs: 1
+    SeverityMinTabs: 2
+    FileNameMinTabs: 16
+    MethodMinTabs: 8
+  IncludeCallStacks: 1
+  ExistingFile: 1
