@@ -4,12 +4,15 @@ using UberLogger;
 using UnityEngine;
 
 /// <summary>
-/// File logger backend, which writes log files with a structured format:
-/// [Timestamp, in UTC time coordinates] <message/warning/exception> <file> <method> <message>
-/// Fields will be visually aligned via tabs. If you 
+/// <para>File logger backend, which writes log files with a structured format:</para>
+/// <para>[Timestamp, in UTC time coordinates] message/warning/exception file method message</para>
+/// <para>Fields will be visually aligned via tabs.</para>
 /// </summary>
 public class UberLoggerStructuredFile : UberLogger.ILogger
 {
+    /// <summary>
+    /// Which types of log messages shall include full callstacks
+    /// </summary>
     public enum IncludeCallstackMode
     {
         Never,
@@ -17,9 +20,18 @@ public class UberLoggerStructuredFile : UberLogger.ILogger
         Always
     }
 
+    /// <summary>
+    /// What to do if the the log file already exists when UberLoggerStructuredFile starts
+    /// </summary>
     public enum ExistingFileMode
     {
+        /// <summary>
+        /// Replace the existing log file with the new log file
+        /// </summary>
         Overwrite,
+        /// <summary>
+        /// Add a suffix to the log file name, which makes the new file name unique
+        /// </summary>
         DoNotOverwrite
     };
 
@@ -46,12 +58,12 @@ public class UberLoggerStructuredFile : UberLogger.ILogger
     public IndentationSettings Indentation;
 
     /// <summary>
-    /// Constructor. Make sure to add it to UberLogger via Logger.AddLogger();
+    /// Creates a logger which writes to disk with a structured format. Make sure to add the created object to UberLogger via Logger.AddLogger() as well.
+    /// </summary>
     /// <param name="fileLogPath">Output file name (absolute path)</param>
     /// <param name="indentationSettings">Provide tab settings to get an output that uses tabs to align fields above each other visually. Pass null to always have 1 tab between columns.</param>
     /// <param name="includeCallStacks">When to show callstacks in log; never, only for warnings/errors, or always</param>
     /// <param name="existingFileMode">If set to Overwrite, overwrite existing log file; if set to DoNotOverwrite, add suffixes (.1 .2 etc) until an unused file name is found</param>
-    /// </summary>
     public UberLoggerStructuredFile(string fileLogPath, IndentationSettings indentation, IncludeCallstackMode includeCallStacks = IncludeCallstackMode.WarningsAndErrorsOnly, ExistingFileMode existingFileHandling = ExistingFileMode.Overwrite)
     {
         IncludeCallStacks = includeCallStacks;
