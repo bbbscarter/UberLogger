@@ -41,15 +41,15 @@ public class UberLoggerStructuredFile : UberLogger.ILogger
 
     /// <summary>
     /// Constructor. Make sure to add it to UberLogger via Logger.AddLogger();
-    /// <param name="filename">Output file name. Relative to Application.persistentDataPath.</param>
+    /// <param name="fileLogPath">Output file name (absolute path)</param>
     /// <param name="indentationSettings">Provide tab settings to get an output that uses tabs to align fields above each other visually. Pass null to always have 1 tab between columns.</param>
     /// <param name="includeCallStacks">When to show callstacks in log; never, only for warnings/errors, or always</param>
     /// </summary>
-    public UberLoggerStructuredFile(string filename, IndentationSettings indentation, IncludeCallstackMode includeCallStacks = IncludeCallstackMode.WarningsAndErrorsOnly)
+    public UberLoggerStructuredFile(string fileLogPath, IndentationSettings indentation, IncludeCallstackMode includeCallStacks = IncludeCallstackMode.WarningsAndErrorsOnly)
     {
         IncludeCallStacks = includeCallStacks;
         Indentation = indentation;
-        var fileLogPath = System.IO.Path.Combine(Application.persistentDataPath, filename);
+
         Debug.Log("Initialising file logging to " + fileLogPath);
         LogFileWriter = new StreamWriter(fileLogPath, false);
         LogFileWriter.AutoFlush = true;
@@ -107,9 +107,9 @@ public class UberLoggerStructuredFile : UberLogger.ILogger
             {
                 LogStackFrame stackFrame = logInfo.OriginatingSourceLocation;
 
-                formattedLine += PadString(stackFrame.FileName + "(" + stackFrame.LineNumber + ")", Indentation.FileNameMinTabs);
+                formattedLine += PadString(stackFrame.GetFormattedFileName(), Indentation.FileNameMinTabs);
 
-                formattedLine += PadString(stackFrame.DeclaringType + "." + stackFrame.MethodName + "()", Indentation.MethodMinTabs);
+                formattedLine += PadString(stackFrame.GetFormattedMethodName(), Indentation.MethodMinTabs);
             }
             else
                 formattedLine += PadString("<No callstack>", Indentation.FileNameMinTabs) + PadString("<Unknown method>", Indentation.MethodMinTabs);
@@ -137,8 +137,8 @@ public class UberLoggerStructuredFile : UberLogger.ILogger
                         + PadString("", Indentation.MessageMinTabs)
                         + PadString(logInfo.Channel, Indentation.ChannelMinTabs)
                         + PadString("Callstack", Indentation.SeverityMinTabs)
-                        + PadString(frame.FileName + "(" + frame.LineNumber + ")", Indentation.FileNameMinTabs)
-                        + PadString(frame.DeclaringType + "." + frame.MethodName + "()", Indentation.MethodMinTabs);
+                        + PadString(frame.GetFormattedFileName(), Indentation.FileNameMinTabs)
+                        + PadString(frame.GetFormattedMethodName(), Indentation.MethodMinTabs);
 
                     LogFileWriter.WriteLine(line);
                 }

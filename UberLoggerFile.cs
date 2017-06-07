@@ -33,7 +33,7 @@ public class UberLoggerFile : UberLogger.ILogger
             {
                 foreach(var frame in logInfo.Callstack)
                 {
-                    LogFileWriter.WriteLine(frame.GetFormattedMethodName());
+                    LogFileWriter.WriteLine(frame.GetFormattedMethodNameWithFileName());
                 }
                 LogFileWriter.WriteLine();
             }
