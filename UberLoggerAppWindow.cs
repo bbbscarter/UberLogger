@@ -293,7 +293,7 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
                     showMessage = showMessage.Replace(UberLogger.Logger.UnityInternalNewLine, " ");
                     if(ShowTimes)
                     {
-                        showMessage = log.GetTimeStampAsString() + ": " + showMessage; 
+                        showMessage = log.GetRelativeTimeStampAsString() + ": " + showMessage; 
                     }
 
                     var content = new GUIContent(showMessage, GetIconForLog(log));

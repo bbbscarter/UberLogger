@@ -139,12 +139,19 @@ namespace UberLogger
         public LogSeverity Severity;
         public string Message;
         public List<LogStackFrame> Callstack;
-        public double TimeStamp;
-        string TimeStampAsString;
+        public double RelativeTimeStamp;
+        string RelativeTimeStampAsString;
+        public DateTime AbsoluteTimeStamp;
+        string AbsoluteTimeStampAsString;
 
-        public string GetTimeStampAsString()
+        public string GetRelativeTimeStampAsString()
         {
-            return TimeStampAsString;
+            return RelativeTimeStampAsString;
+        }
+
+        public string GetAbsoluteTimeStampAsString()
+        {
+            return AbsoluteTimeStampAsString;
         }
 
         public LogInfo(UnityEngine.Object source, string channel, LogSeverity severity, List<LogStackFrame> callstack, object message, params object[] par)
@@ -175,8 +182,10 @@ namespace UberLogger
             }
 
             Callstack = callstack;
-            TimeStamp = Logger.GetTime();
-            TimeStampAsString = String.Format("{0:0.0000}", TimeStamp);
+            RelativeTimeStamp = Logger.GetRelativeTime();
+            AbsoluteTimeStamp = DateTime.UtcNow;
+            RelativeTimeStampAsString = String.Format("{0:0.0000}", RelativeTimeStamp);
+            AbsoluteTimeStampAsString = AbsoluteTimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 
@@ -224,7 +233,7 @@ namespace UberLogger
             UnityLogInternal(logString, stackTrace, logType);
         }
     
-        static public double GetTime()
+        static public double GetRelativeTime()
         {
             long ticks = DateTime.Now.Ticks;
             return TimeSpan.FromTicks(ticks - StartTick).TotalSeconds;
