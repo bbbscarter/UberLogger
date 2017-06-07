@@ -80,6 +80,19 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 
     }
 
+    /// <summary>
+    /// Converts the entire message log to a multiline string
+    /// </summary>
+    public string ExtractLogListToString()
+    {
+        string result = "";
+        foreach (CountedLog log in RenderLogs)
+        {
+            UberLogger.LogInfo logInfo = log.Log;
+            result += logInfo.GetRelativeTimeStampAsString() + ": " + logInfo.Severity + ": " + logInfo.Message + "\n";
+        }
+        return result;
+    }
 
     Vector2 DrawPos;
     public void OnGUI()
@@ -302,7 +315,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         showMessage = showMessage.Replace(UberLogger.Logger.UnityInternalNewLine, " ");
         if(showTimes)
         {
-            showMessage = log.GetTimeStampAsString() + ": " + showMessage; 
+            showMessage = log.GetRelativeTimeStampAsString() + ": " + showMessage; 
         }
 
         var content = new GUIContent(showMessage, GetIconForLog(log));
