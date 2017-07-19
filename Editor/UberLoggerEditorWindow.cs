@@ -59,8 +59,9 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         // And, due to Unity serialisation stuff, necessary to do to it here.
         UberLogger.Logger.AddLogger(EditorLogger);
         EditorLogger.AddWindow(this);
-        
-#if UNITY_5
+
+// _OR_NEWER only became available from 5.3
+#if UNITY_5 || UNITY_5_3_OR_NEWER
         titleContent.text = "Uber Console";
 #else
         title = "Uber Console";
