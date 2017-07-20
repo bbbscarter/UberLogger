@@ -49,7 +49,9 @@ namespace UberLogger
         public int LineNumber;
         public string FileName;
 
+        string FormattedMethodNameWithFileName;
         string FormattedMethodName;
+        string FormattedFileName;
 
         /// <summary>
         /// Convert from a .Net stack frame
@@ -58,7 +60,7 @@ namespace UberLogger
         {
             var method = frame.GetMethod();
             MethodName = method.Name;
-            DeclaringType = method.DeclaringType.Name;
+            DeclaringType = method.DeclaringType.FullName;
 
             var pars = method.GetParameters();
             for (int c1=0; c1<pars.Length; c1++)
@@ -72,7 +74,7 @@ namespace UberLogger
 
             FileName = frame.GetFileName();
             LineNumber = frame.GetFileLineNumber();
-            FormattedMethodName = MakeFormattedMethodName();
+            MakeFormattedNames();
         }
 
         /// <summary>
@@ -82,11 +84,13 @@ namespace UberLogger
         {
             if(Logger.ExtractInfoFromUnityStackInfo(unityStackFrame, ref DeclaringType, ref MethodName, ref FileName, ref LineNumber))
             {
-                FormattedMethodName = MakeFormattedMethodName();
+                MakeFormattedNames();
             }
             else
             {
+                FormattedMethodNameWithFileName = unityStackFrame;
                 FormattedMethodName = unityStackFrame;
+                FormattedFileName = unityStackFrame;
             }
         }
 
@@ -98,21 +102,35 @@ namespace UberLogger
         {
             FileName = filename;
             LineNumber = lineNumber;
+            FormattedMethodNameWithFileName = message;
             FormattedMethodName = message;
+            FormattedFileName = message;
         }
 
 
+
+        public string GetFormattedMethodNameWithFileName()
+        {
+            return FormattedMethodNameWithFileName;
+        }
 
         public string GetFormattedMethodName()
         {
             return FormattedMethodName;
         }
 
+        public string GetFormattedFileName()
+        {
+            return FormattedFileName;
+        }
+
         /// <summary>
         /// Make a nice string showing the stack information - used by the loggers
         /// </summary>
-        string MakeFormattedMethodName()
+        void MakeFormattedNames()
         {
+            FormattedMethodName = String.Format("{0}.{1}({2})", DeclaringType, MethodName, ParameterSig);
+
             string filename = FileName;
             if(!String.IsNullOrEmpty(FileName))
             {
@@ -123,8 +141,9 @@ namespace UberLogger
                     filename = FileName.Substring(startSubName);
                 }
             }
-            string methodName = String.Format("{0}.{1}({2}) (at {3}:{4})", DeclaringType, MethodName, ParameterSig, filename, LineNumber);
-            return methodName;
+            FormattedFileName = String.Format("{0}:{1}", filename, LineNumber);
+
+            FormattedMethodNameWithFileName = String.Format("{0} (at {1})", FormattedMethodName, FormattedFileName);
         }
     }
 
@@ -139,20 +158,29 @@ namespace UberLogger
         public LogSeverity Severity;
         public string Message;
         public List<LogStackFrame> Callstack;
-        public double TimeStamp;
-        string TimeStampAsString;
+        public LogStackFrame OriginatingSourceLocation;
+        public double RelativeTimeStamp;
+        string RelativeTimeStampAsString;
+        public DateTime AbsoluteTimeStamp;
+        string AbsoluteTimeStampAsString;
 
-        public string GetTimeStampAsString()
+        public string GetRelativeTimeStampAsString()
         {
-            return TimeStampAsString;
+            return RelativeTimeStampAsString;
         }
 
-        public LogInfo(UnityEngine.Object source, string channel, LogSeverity severity, List<LogStackFrame> callstack, object message, params object[] par)
+        public string GetAbsoluteTimeStampAsString()
+        {
+            return AbsoluteTimeStampAsString;
+        }
+
+        public LogInfo(UnityEngine.Object source, string channel, LogSeverity severity, List<LogStackFrame> callstack, LogStackFrame originatingSourceLocation, object message, params object[] par)
         {
             Source = source;
             Channel = channel;
             Severity = severity;
             Message = "";
+            OriginatingSourceLocation = originatingSourceLocation;
 
             var messageString = message as String;
             if(messageString!=null)
@@ -175,8 +203,10 @@ namespace UberLogger
             }
 
             Callstack = callstack;
-            TimeStamp = Logger.GetTime();
-            TimeStampAsString = String.Format("{0:0.0000}", TimeStamp);
+            RelativeTimeStamp = Logger.GetRelativeTime();
+            AbsoluteTimeStamp = DateTime.UtcNow;
+            RelativeTimeStampAsString = String.Format("{0:0.0000}", RelativeTimeStamp);
+            AbsoluteTimeStampAsString = AbsoluteTimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 
@@ -230,7 +260,7 @@ namespace UberLogger
             UnityLogInternal(logString, stackTrace, logType);
         }
     
-        static public double GetTime()
+        static public double GetRelativeTime()
         {
             long ticks = DateTime.Now.Ticks;
             return TimeSpan.FromTicks(ticks - StartTick).TotalSeconds;
@@ -374,13 +404,15 @@ namespace UberLogger
         /// Returns false if the stack frame contains any methods flagged as LogUnityOnly
         /// </summary>
         [StackTraceIgnore]
-        static bool GetCallstack(ref List<LogStackFrame> callstack)
+        static bool GetCallstack(ref List<LogStackFrame> callstack, out LogStackFrame originatingSourceLocation)
         {
             callstack.Clear();
             StackTrace stackTrace = new StackTrace(true);           // get call stack
             StackFrame[] stackFrames = stackTrace.GetFrames();  // get method calls (frames)
 
             bool encounteredIgnoredMethodPreviously = false;
+
+            originatingSourceLocation = null;
 
             // Iterate backwards over stackframes; this enables us to show the "first" ignored Unity method if need be, but hide subsequent ones
             for (int i = stackFrames.Length - 1; i >= 0; i--)
@@ -395,6 +427,8 @@ namespace UberLogger
                 if(!method.IsDefined(typeof(StackTraceIgnore), true))
                 {
                     IgnoredUnityMethod.Mode showHideMode = ShowOrHideMethod(method);
+
+                    bool setOriginatingSourceLocation = (showHideMode == IgnoredUnityMethod.Mode.Show);
 
                     if (showHideMode == IgnoredUnityMethod.Mode.ShowIfFirstIgnoredMethod)
                     {
@@ -413,6 +447,9 @@ namespace UberLogger
                         var logStackFrame = new LogStackFrame(stackFrame);
                         
                         callstack.Add(logStackFrame);
+
+                        if (setOriginatingSourceLocation)
+                            originatingSourceLocation = logStackFrame;
                     }
                 }
             }
@@ -427,7 +464,7 @@ namespace UberLogger
         /// Converts a Unity callstack string into a list of UberLogger's LogStackFrame
         /// Doesn't do any filtering, since this should only be dealing with internal Unity errors rather than client code
         /// </summary>
-        static List<LogStackFrame> GetCallstackFromUnityLog(string unityCallstack)
+        static List<LogStackFrame> GetCallstackFromUnityLog(string unityCallstack, out LogStackFrame originatingSourceLocation)
         {
             var lines = System.Text.RegularExpressions.Regex.Split(unityCallstack, UberLogger.Logger.UnityInternalNewLine);
 
@@ -435,11 +472,17 @@ namespace UberLogger
             foreach(var line in lines)
             {
                 var frame = new LogStackFrame(line);
-                if(!string.IsNullOrEmpty(frame.GetFormattedMethodName()))
+                if(!string.IsNullOrEmpty(frame.GetFormattedMethodNameWithFileName()))
                 {
                     stack.Add(new LogStackFrame(line));
                 }
             }
+
+            if (stack.Count > 0)
+                originatingSourceLocation = stack[0];
+            else
+                originatingSourceLocation = null;
+
             return stack;
         }
 
@@ -461,7 +504,8 @@ namespace UberLogger
                         AlreadyLogging = true;
                     
                         var callstack = new List<LogStackFrame>();
-                        var unityOnly = GetCallstack(ref callstack);
+                        LogStackFrame originatingSourceLocation;
+                        var unityOnly = GetCallstack(ref callstack, out originatingSourceLocation);
                         if(unityOnly)
                         {
                             return;
@@ -470,7 +514,7 @@ namespace UberLogger
                         //If we have no useful callstack, fall back to parsing Unity's callstack 
                         if(callstack.Count==0)
                         {
-                            callstack = GetCallstackFromUnityLog(unityCallStack);
+                            callstack = GetCallstackFromUnityLog(unityCallStack, out originatingSourceLocation);
                         }
 
                         LogSeverity severity;
@@ -492,7 +536,7 @@ namespace UberLogger
                             callstack.Insert(0, new LogStackFrame(unityMessage, filename, lineNumber));
                         }
 
-                        var logInfo = new LogInfo(null, "", severity, callstack, unityMessage);
+                        var logInfo = new LogInfo(null, "", severity, callstack, originatingSourceLocation, unityMessage);
 
                         //Add this message to our history
                         RecentMessages.AddLast(logInfo);
@@ -528,13 +572,14 @@ namespace UberLogger
                     {
                         AlreadyLogging = true;
                         var callstack = new List<LogStackFrame>();
-                        var unityOnly = GetCallstack(ref callstack);
+                        LogStackFrame originatingSourceLocation;
+                        var unityOnly = GetCallstack(ref callstack, out originatingSourceLocation);
                         if(unityOnly)
                         {
                             return;
                         }
 
-                        var logInfo = new LogInfo(source, channel, severity, callstack, message, par);
+                        var logInfo = new LogInfo(source, channel, severity, callstack, originatingSourceLocation, message, par);
 
                         //Add this message to our history
                         RecentMessages.AddLast(logInfo);
