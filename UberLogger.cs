@@ -211,7 +211,8 @@ namespace UberLogger
         static Logger()
         {
             // Register with Unity's logging system
-#if UNITY_5
+// _OR_NEWER only available from 5.3+
+#if UNITY_5 || UNITY_5_3_OR_NEWER
             Application.logMessageReceivedThreaded += UnityLogHandler;
 #else
             Application.RegisterLogCallback(UnityLogHandler);
