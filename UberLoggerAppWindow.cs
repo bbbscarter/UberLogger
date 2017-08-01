@@ -345,7 +345,7 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
             for(int c1=0; c1<log.Callstack.Count; c1++)
             {
                 var frame = log.Callstack[c1];
-                var methodName = frame.GetFormattedMethodName();
+                var methodName = frame.GetFormattedMethodNameWithFileName();
                 if(!String.IsNullOrEmpty(methodName))
                 {
                     if(c1==SelectedCallstackFrame)

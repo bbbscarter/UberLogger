@@ -49,7 +49,9 @@ namespace UberLogger
         public int LineNumber;
         public string FileName;
 
+        string FormattedMethodNameWithFileName;
         string FormattedMethodName;
+        string FormattedFileName;
 
         /// <summary>
         /// Convert from a .Net stack frame
@@ -58,7 +60,7 @@ namespace UberLogger
         {
             var method = frame.GetMethod();
             MethodName = method.Name;
-            DeclaringType = method.DeclaringType.Name;
+            DeclaringType = method.DeclaringType.FullName;
 
             var pars = method.GetParameters();
             for (int c1=0; c1<pars.Length; c1++)
@@ -72,7 +74,7 @@ namespace UberLogger
 
             FileName = frame.GetFileName();
             LineNumber = frame.GetFileLineNumber();
-            FormattedMethodName = MakeFormattedMethodName();
+            MakeFormattedNames();
         }
 
         /// <summary>
@@ -82,11 +84,13 @@ namespace UberLogger
         {
             if(Logger.ExtractInfoFromUnityStackInfo(unityStackFrame, ref DeclaringType, ref MethodName, ref FileName, ref LineNumber))
             {
-                FormattedMethodName = MakeFormattedMethodName();
+                MakeFormattedNames();
             }
             else
             {
+                FormattedMethodNameWithFileName = unityStackFrame;
                 FormattedMethodName = unityStackFrame;
+                FormattedFileName = unityStackFrame;
             }
         }
 
@@ -98,21 +102,35 @@ namespace UberLogger
         {
             FileName = filename;
             LineNumber = lineNumber;
+            FormattedMethodNameWithFileName = message;
             FormattedMethodName = message;
+            FormattedFileName = message;
         }
 
 
+
+        public string GetFormattedMethodNameWithFileName()
+        {
+            return FormattedMethodNameWithFileName;
+        }
 
         public string GetFormattedMethodName()
         {
             return FormattedMethodName;
         }
 
+        public string GetFormattedFileName()
+        {
+            return FormattedFileName;
+        }
+
         /// <summary>
         /// Make a nice string showing the stack information - used by the loggers
         /// </summary>
-        string MakeFormattedMethodName()
+        void MakeFormattedNames()
         {
+            FormattedMethodName = String.Format("{0}.{1}({2})", DeclaringType, MethodName, ParameterSig);
+
             string filename = FileName;
             if(!String.IsNullOrEmpty(FileName))
             {
@@ -123,8 +141,9 @@ namespace UberLogger
                     filename = FileName.Substring(startSubName);
                 }
             }
-            string methodName = String.Format("{0}.{1}({2}) (at {3}:{4})", DeclaringType, MethodName, ParameterSig, filename, LineNumber);
-            return methodName;
+            FormattedFileName = String.Format("{0}:{1}", filename, LineNumber);
+
+            FormattedMethodNameWithFileName = String.Format("{0} (at {1})", FormattedMethodName, FormattedFileName);
         }
     }
 
@@ -438,7 +457,7 @@ namespace UberLogger
             foreach(var line in lines)
             {
                 var frame = new LogStackFrame(line);
-                if(!string.IsNullOrEmpty(frame.GetFormattedMethodName()))
+                if(!string.IsNullOrEmpty(frame.GetFormattedMethodNameWithFileName()))
                 {
                     stack.Add(new LogStackFrame(line));
                 }
