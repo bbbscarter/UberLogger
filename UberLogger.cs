@@ -226,7 +226,12 @@ namespace UberLogger
         //  System.Environment.NewLine when you want to split multi-line strings which are emitted
         //  by Unity's internal APIs.
         public static string UnityInternalNewLine = "\n";
-	
+
+        // Unity uses forward-slashes as directory separators, regardless of OS.
+        // Convert from this separator to System.IO.Path.DirectorySeparatorChar before passing any Unity-originated
+        //  paths to APIs which expect OS-native paths.
+        public static char UnityInternalDirectorySeparator = '/';
+
         static List<ILogger> Loggers = new List<ILogger>();
         static LinkedList<LogInfo> RecentMessages = new LinkedList<LogInfo>();
         static long StartTick;
@@ -236,7 +241,8 @@ namespace UberLogger
         static Logger()
         {
             // Register with Unity's logging system
-#if UNITY_5
+// _OR_NEWER only available from 5.3+
+#if UNITY_5 || UNITY_5_3_OR_NEWER
             Application.logMessageReceivedThreaded += UnityLogHandler;
 #else
             Application.RegisterLogCallback(UnityLogHandler);
@@ -281,6 +287,15 @@ namespace UberLogger
                     Loggers.Add(logger);
                 }
             }
+        }
+
+        /// <summary>
+        /// Paths provided by Unity will contain forward slashes as directory separators on all OSes.
+        /// This method changes all forward slashes to OS-specific directory separators.
+        /// </summary>
+        static public string ConvertDirectorySeparatorsFromUnityToOS(string unityFileName)
+        {
+            return unityFileName.Replace(UnityInternalDirectorySeparator, System.IO.Path.DirectorySeparatorChar);
         }
 
         /// <summary>
