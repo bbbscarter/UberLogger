@@ -44,7 +44,9 @@ And the in-game version looks like this:
 * Usage examples can be seen in the Examples folder.
 
 ## Notes
-* Tested in Unity 5.x free and Pro.
+* Tested in Unity 5.x, 2017.x, free and Pro.
+* Logging disabled in non-debug builds. To force it on, define
+  ENABLE_UBERLOGGING.
 * Due to file incompatibilities, the in-game console skin doesn't work
   in Unity 4 and would need to be set up again. Same with the
   prefab. That said, the code works, and so does the editor
