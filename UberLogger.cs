@@ -37,7 +37,20 @@ namespace UberLogger
         /// </summary>
         void Log(LogInfo logInfo);
     }
-    
+
+    /// <summary>
+    /// Interface for implementing new log message filter methods.
+    /// Filters will be applied to log messages before they are forwarded to any loggers or Unity itself.
+    /// </summary>
+    public interface IFilter
+    {
+        /// <summary>
+        /// Apply filter to log message.
+        /// Should return true if the message is to be kept, and false if the message is to be silenced.
+        /// </summary>
+        bool ApplyFilter(string channel, UnityEngine.Object source, LogSeverity severity, object message, params object[] par);
+    }
+
     //Information about a particular frame of a callstack
     [System.Serializable]
     public class LogStackFrame
@@ -237,7 +250,8 @@ namespace UberLogger
         static long StartTick;
         static bool AlreadyLogging = false;
         static Regex UnityMessageRegex;
-
+        static List<IFilter> Filters = new List<IFilter>();
+        
         static Logger()
         {
             // Register with Unity's logging system
@@ -286,6 +300,17 @@ namespace UberLogger
                 {
                     Loggers.Add(logger);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Registers a new filter mechanism, which will be able to silence any future log messages
+        /// </summary>
+        static public void AddFilter(IFilter filter)
+        {
+            lock (Loggers)
+            {
+                Filters.Add(filter);
             }
         }
 
@@ -571,6 +596,13 @@ namespace UberLogger
                     try
                     {
                         AlreadyLogging = true;
+
+                        foreach (IFilter filter in Filters)
+                        {
+                            if (!filter.ApplyFilter(channel, source, severity, message, par))
+                                return;
+                        }
+						
                         var callstack = new List<LogStackFrame>();
                         LogStackFrame originatingSourceLocation;
                         var unityOnly = GetCallstack(ref callstack, out originatingSourceLocation);
