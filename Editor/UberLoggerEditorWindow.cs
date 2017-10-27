@@ -95,6 +95,60 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         return result;
     }
 
+    /// <summary> 
+    /// Converts the currently-displayed stack to a multiline string 
+    /// </summary> 
+    public string ExtractLogDetailsToString() 
+    { 
+        string result = ""; 
+        if (RenderLogs.Count > 0 && SelectedRenderLog >= 0) 
+        { 
+            var countedLog = RenderLogs[SelectedRenderLog]; 
+            var log = countedLog.Log; 
+ 
+            for (int c1 = 0; c1 < log.Callstack.Count; c1++) 
+            { 
+                var frame = log.Callstack[c1]; 
+                var methodName = frame.GetFormattedMethodName(); 
+                result += methodName + "\n"; 
+            } 
+        } 
+        return result; 
+    } 
+
+    /// <summary> 
+    /// Handle "Copy" command; copies log & stacktrace contents to clipboard
+    /// </summary> 
+    public void HandleCopyToClipboard() 
+    { 
+        const string copyCommandName = "Copy";
+
+        Event e = Event.current;
+        if (e.type == EventType.ValidateCommand && e.commandName == copyCommandName)
+        {
+            // Respond to "Copy" command
+
+            // Confirm that we will consume the command; this will result in the command being re-issued with type == EventType.ExecuteCommand
+            e.Use();
+        }
+        else if (e.type == EventType.ExecuteCommand && e.commandName == copyCommandName)
+        {
+            // Copy current message log and current stack to the clipboard 
+ 
+            // Convert all messages to a single long string 
+            // It would be preferable to only copy one of the two, but that requires UberLogger to have focus handling 
+            // between the message log and stack views 
+            string result = ExtractLogListToString(); 
+ 
+            result += "\n"; 
+ 
+            // Convert current callstack to a single long string 
+            result += ExtractLogDetailsToString(); 
+ 
+            GUIUtility.systemCopyBuffer = result; 
+        } 
+    }
+
     Vector2 DrawPos;
     public void OnGUI()
     {
@@ -145,6 +199,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         DrawPos.y += DividerHeight;
 
         DrawLogDetails();
+
+        HandleCopyToClipboard();
 
         //If we're dirty, do a repaint
         Dirty = false;
