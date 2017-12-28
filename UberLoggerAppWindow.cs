@@ -437,7 +437,7 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
         GUI.DrawTexture(resizerRect, Texture2D.whiteTexture);
         GUI.color = oldColor;
 
-        if( Event.current.type == EventType.mouseDown && resizerRect.Contains(Event.current.mousePosition))
+        if( Event.current.type == EventType.MouseDown && resizerRect.Contains(Event.current.mousePosition))
         {
             Resizing = true;
         }

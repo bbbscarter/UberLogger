@@ -812,7 +812,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         GUI.color = oldColor;
         EditorGUIUtility.AddCursorRect(CursorChangeRect,MouseCursor.ResizeVertical);
          
-        if( Event.current.type == EventType.mouseDown && CursorChangeRect.Contains(Event.current.mousePosition))
+        if( Event.current.type == EventType.MouseDown && CursorChangeRect.Contains(Event.current.mousePosition))
         {
             Resize = true;
         }
