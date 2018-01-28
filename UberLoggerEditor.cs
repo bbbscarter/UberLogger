@@ -43,7 +43,7 @@ public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
 
     public void OnEnable()
     {
-        EditorApplication.playmodeStateChanged += OnPlaymodeStateChanged;
+        EditorApplication.playModeStateChanged += OnPlaymodeStateChanged;
 
         //Make this scriptable object persist between Play sessions
         hideFlags = HideFlags.HideAndDontSave;
@@ -64,7 +64,7 @@ public class UberLoggerEditor : ScriptableObject, UberLogger.ILogger
         WasPlaying = EditorApplication.isPlayingOrWillChangePlaymode;
     }
     
-    void OnPlaymodeStateChanged()
+    void OnPlaymodeStateChanged(PlayModeStateChange obj)
     {
         ProcessOnStartClear();
     }
