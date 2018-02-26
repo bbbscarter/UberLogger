@@ -267,6 +267,13 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             ShowTimes = showTimes;
         }
         DrawPos.x += elementSize.x;
+        var showChannels = ToggleClamped(ShowChannels, "Channels", EditorStyles.toolbarButton, out elementSize);
+        if (showChannels != ShowChannels)
+        {
+            MakeDirty = true;
+            ShowChannels = showChannels;
+        }
+        DrawPos.x += elementSize.x;
         var collapse = ToggleClamped(Collapse, "Collapse", EditorStyles.toolbarButton, out elementSize);
         if(collapse!=Collapse)
         {
@@ -365,15 +372,19 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     /// <summary>
     /// Converts a given log element into a piece of gui content to be displayed
     /// </summary>
-    GUIContent GetLogLineGUIContent(UberLogger.LogInfo log, bool showTimes)
+    GUIContent GetLogLineGUIContent(UberLogger.LogInfo log, bool showTimes, bool showChannels)
     {
         var showMessage = log.Message;
         //Make all messages single line
         showMessage = showMessage.Replace(UberLogger.Logger.UnityInternalNewLine, " ");
-        if(showTimes)
-        {
-            showMessage = log.GetRelativeTimeStampAsString() + ": " + showMessage; 
-        }
+
+        showMessage = string.Format("{0}{1}{2}{3}{4}",
+                showChannels ? "[" + log.Channel + "]" : "",
+                showTimes && showChannels ? " " : "",
+                showTimes ? log.GetRelativeTimeStampAsString() : "",
+                showChannels || showTimes ? " : " : "",
+                showMessage
+            );
 
         var content = new GUIContent(showMessage, GetIconForLog(log));
         return content;
@@ -435,7 +446,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 
                 foreach(var countedLog in collapsedLinesList)
                 {
-                    var content = GetLogLineGUIContent(countedLog.Log, ShowTimes);
+                    var content = GetLogLineGUIContent(countedLog.Log, ShowTimes, ShowChannels);
                     RenderLogs.Add(countedLog);
                     var logLineSize = logLineStyle.CalcSize(content);
                     LogListMaxWidth = Mathf.Max(LogListMaxWidth, logLineSize.x);
@@ -453,7 +464,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 {
                     if(ShouldShowLog(filterRegex, log))
                     {
-                        var content = GetLogLineGUIContent(log, ShowTimes);
+                        var content = GetLogLineGUIContent(log, ShowTimes, ShowChannels);
                         RenderLogs.Add(new CountedLog(log, 1));
                         var logLineSize = logLineStyle.CalcSize(content);
                         LogListMaxWidth = Mathf.Max(LogListMaxWidth, logLineSize.x);
@@ -507,7 +518,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             }
                 
             //Make all messages single line
-            var content = GetLogLineGUIContent(log, ShowTimes);
+            var content = GetLogLineGUIContent(log, ShowTimes, ShowChannels);
             var drawRect = new Rect(logLineX, buttonY, contentRect.width, LogListLineHeight);
             if(GUI.Button(drawRect, content, logLineStyle))
             {
@@ -905,6 +916,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     Texture2D SmallWarningIcon;
     Texture2D SmallMessageIcon;
 
+    bool ShowChannels = true;
     bool ShowTimes = true;
     bool Collapse = false;
     bool ScrollFollowMessages = false;
