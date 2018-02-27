@@ -53,6 +53,17 @@ And the in-game version looks like this:
   UberConsole.
 * Pull requests welcome!
 
+## Extensions
+* [UberLogger-StructuredFile](https://github.com/falldamagestudio/UberLogger-StructuredFile)
+  adds a structured log file format with timestamps, channel names, and control over which
+  log messages are printed with callstacks and which are printed without.
+* [UberLogger-Stackdriver](https://github.com/falldamagestudio/UberLogger-Stackdriver)
+  adds centralized logging. Log messages will be sent from game clients to Google's
+  Stackdriver service. The collected logs can be browsed and searched in the Stackdriver web UI.
+* [UberLogger-LogChannels](https://github.com/falldamagestudio/UberLogger-LogChannels)
+  adds compile-time resolution and muting of log channels. This is useful for very large
+  projects where logging to muted channels causes performance problems.
+  
  * * * *
 
-[UberLogger]: https://github.com/bbbscarter/UberLogger
+UberLogger: https://github.com/bbbscarter/UberLogger
