@@ -4,6 +4,8 @@ using System.Threading;
 
 public class TestUberLogger : MonoBehaviour
 {
+    public static readonly UberLoggerChannel TestChannelWrapper = new UberLoggerChannel("WrapperChannel");
+
     Thread TestThread;
     // Use this for initialization
     void Start ()
@@ -71,6 +73,47 @@ public class TestUberLogger : MonoBehaviour
         UberDebug.LogErrorChannel("Test", "ULogErrorChannel with param {0}", "Test");
         UberDebug.LogErrorChannel(gameObject, "Test", "ULogErrorChannel with GameObject");
         UberDebug.LogErrorChannel(gameObject, "Test", "ULogErrorChannel with GameObject and param {0}", "Test");
+
+        // Will output all messages in test function.
+        RunChannelWrapperTests();
+
+        // Will hide .Log(...) calls in test function.
+        TestChannelWrapper.Filter = UberLoggerChannel.Filters.HideLogs;
+        RunChannelWrapperTests();
+
+        // Will hide .LogWarning(...) calls in test function.
+        TestChannelWrapper.Filter = UberLoggerChannel.Filters.HideWarnings;
+        RunChannelWrapperTests();
+
+        // Will hide .LogError(...) calls in test function.
+        TestChannelWrapper.Filter = UberLoggerChannel.Filters.HideErrors;
+        RunChannelWrapperTests();
+
+        // Will hide .Log(...) and LogWarning(...) calls in test function.
+        TestChannelWrapper.Filter = UberLoggerChannel.Filters.HideLogs | UberLoggerChannel.Filters.HideWarnings;
+        RunChannelWrapperTests();
+    }
+
+    private void RunChannelWrapperTests()
+    {
+        Debug.Log("Running Channel Wrapper Tests...");
+
+        TestChannelWrapper.Log("Wrapped Channel");
+        TestChannelWrapper.Log("Wrapped Channel with param {0}", "Test");
+        TestChannelWrapper.Log(gameObject, "Wrapped Channel with GameObject");
+        TestChannelWrapper.Log(gameObject, "Wrapped Channel with GameObject and param {0}", "Test");
+
+        TestChannelWrapper.LogWarning("Wrapped Channel Warning");
+        TestChannelWrapper.LogWarning("Wrapped Channel Warning with param {0}", "Test");
+        TestChannelWrapper.LogWarning(gameObject, "Wrapped Channel Warning with GameObject");
+        TestChannelWrapper.LogWarning(gameObject, "Wrapped Channel Warning with GameObject and param {0}", "Test");
+
+        TestChannelWrapper.LogError("Wrapped Channel Error");
+        TestChannelWrapper.LogError("Wrapped Channel Error with param {0}", "Test");
+        TestChannelWrapper.LogError(gameObject, "Wrapped Channel Error with GameObject");
+        TestChannelWrapper.LogError(gameObject, "Wrapped Channel Error with GameObject and param {0}", "Test");
+
+        Debug.Log("... Done Running Channel Wrapper Tests.");
     }
 	
 	// Update is called once per frame
