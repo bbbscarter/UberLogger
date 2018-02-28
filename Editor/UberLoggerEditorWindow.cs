@@ -375,14 +375,24 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     GUIContent GetLogLineGUIContent(UberLogger.LogInfo log, bool showTimes, bool showChannels)
     {
         var showMessage = log.Message;
+        
         //Make all messages single line
         showMessage = showMessage.Replace(UberLogger.Logger.UnityInternalNewLine, " ");
 
+        // Format the message as follows:
+        //     [channel] 0.000 : message  <-- Both channel and time shown
+        //     0.000 : message            <-- Time shown, channel hidden
+        //     [channel] : message        <-- Channel shown, time hidden
+        //     message                    <-- Both channel and time hidden
+        var channelMessage = showChannels ? string.Format("[{0}]", log.Channel) : "";
+        var channelTimeSeparator = (showChannels && showTimes) ? " " : "";
+        var timeMessage = showTimes ? string.Format("{0}", log.GetRelativeTimeStampAsString()) : "";
+        var prefixMessageSeparator = (showChannels || showTimes) ? " : " : "";
         showMessage = string.Format("{0}{1}{2}{3}{4}",
-                showChannels ? "[" + log.Channel + "]" : "",
-                showTimes && showChannels ? " " : "",
-                showTimes ? log.GetRelativeTimeStampAsString() : "",
-                showChannels || showTimes ? " : " : "",
+                channelMessage,
+                channelTimeSeparator,
+                timeMessage,
+                prefixMessageSeparator,
                 showMessage
             );
 
