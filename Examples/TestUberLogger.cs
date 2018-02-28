@@ -78,19 +78,19 @@ public class TestUberLogger : MonoBehaviour
         RunChannelWrapperTests();
 
         // Will hide .Log(...) calls in test function.
-        TestChannelWrapper.Filter = UberLoggerChannel.Filters.HideLogs;
+        TestChannelWrapper.Filter = UberLoggerChannel.Filters.Logs;
         RunChannelWrapperTests();
 
         // Will hide .LogWarning(...) calls in test function.
-        TestChannelWrapper.Filter = UberLoggerChannel.Filters.HideWarnings;
+        TestChannelWrapper.Filter = UberLoggerChannel.Filters.Warnings;
         RunChannelWrapperTests();
 
         // Will hide .LogError(...) calls in test function.
-        TestChannelWrapper.Filter = UberLoggerChannel.Filters.HideErrors;
+        TestChannelWrapper.Filter = UberLoggerChannel.Filters.Errors;
         RunChannelWrapperTests();
 
         // Will hide .Log(...) and LogWarning(...) calls in test function.
-        TestChannelWrapper.Filter = UberLoggerChannel.Filters.HideLogs | UberLoggerChannel.Filters.HideWarnings;
+        TestChannelWrapper.Filter = UberLoggerChannel.Filters.Logs | UberLoggerChannel.Filters.Warnings;
         RunChannelWrapperTests();
     }
 

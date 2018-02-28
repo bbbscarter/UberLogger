@@ -9,10 +9,10 @@ using UnityEngine;
 /// </summary>
 public class UberLoggerChannel
 {
-    private string _channelName;
+    private string ChannelName;
     public UberLoggerChannel(string channelName)
     {
-        _channelName = channelName;
+        ChannelName = channelName;
         Filter = Filters.None;
     }
 
@@ -23,9 +23,9 @@ public class UberLoggerChannel
     public enum Filters
     {
         None = 0,
-        HideLogs = 1,
-        HideWarnings = 2,
-        HideErrors = 4
+        Logs = 1 << 0,
+        Warnings = 1 << 1,
+        Errors = 1 << 2
     }
 
     /// <summary>
@@ -36,54 +36,54 @@ public class UberLoggerChannel
     [StackTraceIgnore]
     public void Log(string message, params object[] par)
     {
-        if ((Filter & Filters.HideLogs) != Filters.HideLogs)
+        if ((Filter & Filters.Logs) == 0)
         {
-            UberDebug.LogChannel(_channelName, message, par);
+            UberDebug.LogChannel(ChannelName, message, par);
         }
     }
 
     [StackTraceIgnore]
     public void Log(Object context, string message, params object[] par)
     {
-        if ((Filter & Filters.HideLogs) != Filters.HideLogs)
+        if ((Filter & Filters.Logs) == 0)
         {
-            UberDebug.LogChannel(context, _channelName, message, par);
+            UberDebug.LogChannel(context, ChannelName, message, par);
         }
     }
 
     [StackTraceIgnore]
     public void LogWarning(string message, params object[] par)
     {
-        if ((Filter & Filters.HideWarnings) != Filters.HideWarnings)
+        if ((Filter & Filters.Warnings) == 0)
         {
-            UberDebug.LogWarningChannel(_channelName, message, par);
+            UberDebug.LogWarningChannel(ChannelName, message, par);
         }
     }
 
     [StackTraceIgnore]
     public void LogWarning(Object context, string message, params object[] par)
     {
-        if ((Filter & Filters.HideWarnings) != Filters.HideWarnings)
+        if ((Filter & Filters.Warnings) == 0)
         {
-            UberDebug.LogWarningChannel(context, _channelName, message, par);
+            UberDebug.LogWarningChannel(context, ChannelName, message, par);
         }
     }
 
     [StackTraceIgnore]
     public void LogError(string message, params object[] par)
     {
-        if ((Filter & Filters.HideErrors) != Filters.HideErrors)
+        if ((Filter & Filters.Errors) == 0)
         {
-            UberDebug.LogErrorChannel(_channelName, message, par);
+            UberDebug.LogErrorChannel(ChannelName, message, par);
         }
     }
 
     [StackTraceIgnore]
     public void LogError(Object context, string message, params object[] par)
     {
-        if ((Filter & Filters.HideErrors) != Filters.HideErrors)
+        if ((Filter & Filters.Errors) == 0)
         {
-            UberDebug.LogErrorChannel(context, _channelName, message, par);
+            UberDebug.LogErrorChannel(context, ChannelName, message, par);
         }
     }
 }
