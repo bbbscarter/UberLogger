@@ -384,10 +384,11 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         //     0.000 : message            <-- Time shown, channel hidden
         //     [channel] : message        <-- Channel shown, time hidden
         //     message                    <-- Both channel and time hidden
-        var channelMessage = showChannels ? string.Format("[{0}]", log.Channel) : "";
-        var channelTimeSeparator = (showChannels && showTimes) ? " " : "";
+        var showChannel = showChannels && !string.IsNullOrEmpty(log.Channel);
+        var channelMessage = showChannel ? string.Format("[{0}]", log.Channel) : "";
+        var channelTimeSeparator = (showChannel && showTimes) ? " " : "";
         var timeMessage = showTimes ? string.Format("{0}", log.GetRelativeTimeStampAsString()) : "";
-        var prefixMessageSeparator = (showChannels || showTimes) ? " : " : "";
+        var prefixMessageSeparator = (showChannel || showTimes) ? " : " : "";
         showMessage = string.Format("{0}{1}{2}{3}{4}",
                 channelMessage,
                 channelTimeSeparator,
