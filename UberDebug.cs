@@ -43,7 +43,7 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void LogWarning(UnityEngine.Object context, object message, params object[] par)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_WARNINGS)
         UberLogger.Logger.Log("", context, LogSeverity.Warning, message, par);
         #endif
     }
@@ -51,7 +51,7 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void LogWarning(object message, params object[] par)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_WARNINGS)
         UberLogger.Logger.Log("", null, LogSeverity.Warning, message, par);
         #endif
     }
@@ -59,7 +59,7 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void LogWarningChannel(UnityEngine.Object context, string channel, string message, params object[] par)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_WARNINGS)
         UberLogger.Logger.Log(channel, context, LogSeverity.Warning, message, par);
         #endif
     }
@@ -67,7 +67,7 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void LogWarningChannel(string channel, string message, params object[] par)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_WARNINGS)
         UberLogger.Logger.Log(channel, null, LogSeverity.Warning, message, par);
         #endif
     }
@@ -75,7 +75,7 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void LogError(UnityEngine.Object context, object message, params object[] par)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_ERRORS)
         UberLogger.Logger.Log("", context, LogSeverity.Error, message, par);
         #endif
     }
@@ -83,7 +83,7 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void LogError(object message, params object[] par)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_ERRORS)
         UberLogger.Logger.Log("", null, LogSeverity.Error, message, par);
         #endif
     }
@@ -91,7 +91,7 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void LogErrorChannel(UnityEngine.Object context, string channel, string message, params object[] par)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_ERRORS)
         UberLogger.Logger.Log(channel, context, LogSeverity.Error, message, par);
         #endif
     }
@@ -99,7 +99,7 @@ public static class UberDebug
     [StackTraceIgnore]
     static public void LogErrorChannel(string channel, string message, params object[] par)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_ERRORS)
         UberLogger.Logger.Log(channel, null, LogSeverity.Error, message, par);
         #endif
     }
@@ -118,7 +118,7 @@ public static class UberDebug
     [LogUnityOnly]
     static public void UnityLogWarning(object message)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_WARNINGS)
         UnityEngine.Debug.LogWarning(message);
         #endif
     }
@@ -126,7 +126,7 @@ public static class UberDebug
     [LogUnityOnly]
     static public void UnityLogError(object message)
     {
-        #if ENABLE_UBERLOGGING
+        #if (ENABLE_UBERLOGGING || ENABLE_UBERLOGGING_ERRORS)
         UnityEngine.Debug.LogError(message);
         #endif
     }
