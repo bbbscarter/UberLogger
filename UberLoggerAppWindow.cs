@@ -58,7 +58,7 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
         CurrentTopPaneHeight = Screen.height*SizerStartHeightRatio;
     }
 
-    bool ShowWindow = false;
+    public bool ShowWindow { get; set; }
     public Texture2D ButtonTexture;
     public Texture2D ErrorButtonTexture;
     public Vector2 ButtonPosition;
