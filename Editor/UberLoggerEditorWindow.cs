@@ -77,6 +77,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         WarningIcon = SmallWarningIcon;
         MessageIcon = SmallMessageIcon;
         Dirty = true;
+        FilterChanged = true;
+        NeedToUpdateStyles = true;
         Repaint();
 
     }
@@ -150,40 +152,15 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     }
 
     Vector2 DrawPos;
+    bool NeedToUpdateStyles;
+    bool FilterChanged;
+    int NextIndexToAdd;
     public void OnGUI()
     {
-        //Set up the basic style, based on the Unity defaults
-        //A bit hacky, but means we don't have to ship an editor guistyle and can fit in to pro and free skins
-        Color defaultLineColor = GUI.backgroundColor;
-        GUIStyle unityLogLineEven = null;
-        GUIStyle unityLogLineOdd = null;
-        GUIStyle unitySmallLogLine = null;
-        
-        foreach(var style in GUI.skin.customStyles)
+        if (NeedToUpdateStyles)
         {
-            if     (style.name=="CN EntryBackEven")  unityLogLineEven = style;
-            else if(style.name=="CN EntryBackOdd")   unityLogLineOdd = style;
-            else if(style.name=="CN StatusInfo")   unitySmallLogLine = style;
+            UpdateStyles();
         }
-
-        EntryStyleBackEven = new GUIStyle(unitySmallLogLine);
-
-        EntryStyleBackEven.normal = unityLogLineEven.normal;
-        EntryStyleBackEven.margin = new RectOffset(0, 0, 0, 0);
-        EntryStyleBackEven.border = new RectOffset(0, 0, 0, 0);
-        EntryStyleBackEven.fixedHeight = 0;
-        EntryStyleBackEven.fixedWidth = 0;
-        
-        EntryStyleBackEven.clipping = TextClipping.Overflow;
-        EntryStyleBackEven.stretchWidth = true;
-
-        EntryStyleBackOdd = new GUIStyle(EntryStyleBackEven);
-        EntryStyleBackOdd.normal = unityLogLineOdd.normal;
-
-        DetailsEntryStyleBackEven = new GUIStyle(EntryStyleBackEven);
-        DetailsEntryStyleBackOdd = new GUIStyle(EntryStyleBackOdd);
-
-        SizerLineColour = new Color(defaultLineColor.r*0.5f, defaultLineColor.g*0.5f, defaultLineColor.b*0.5f);
 
         ResizeTopPane();
         DrawPos = Vector2.zero;
@@ -196,7 +173,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         
         if(Dirty)
         {
-            CurrentLogList = EditorLogger.CopyLogInfo();
+            CurrentLogList.Clear();
+            EditorLogger.CopyLogInfoTo(CurrentLogList);
         }
         DrawLogList(logPanelHeight);
 
@@ -214,6 +192,46 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 			MakeDirty = false;
             Repaint();
         }
+        else
+        {
+            FilterChanged = false;
+        }
+    }
+
+    private void UpdateStyles()
+    {
+        //Set up the basic style, based on the Unity defaults
+        //A bit hacky, but means we don't have to ship an editor guistyle and can fit in to pro and free skins
+        Color defaultLineColor = GUI.backgroundColor;
+        GUIStyle unityLogLineEven = null;
+        GUIStyle unityLogLineOdd = null;
+        GUIStyle unitySmallLogLine = null;
+
+        foreach (var style in GUI.skin.customStyles)
+        {
+            if (style.name == "CN EntryBackEven") unityLogLineEven = style;
+            else if (style.name == "CN EntryBackOdd") unityLogLineOdd = style;
+            else if (style.name == "CN StatusInfo") unitySmallLogLine = style;
+        }
+
+        EntryStyleBackEven = new GUIStyle(unitySmallLogLine);
+
+        EntryStyleBackEven.normal = unityLogLineEven.normal;
+        EntryStyleBackEven.margin = new RectOffset(0, 0, 0, 0);
+        EntryStyleBackEven.border = new RectOffset(0, 0, 0, 0);
+        EntryStyleBackEven.fixedHeight = 0;
+        EntryStyleBackEven.fixedWidth = 0;
+
+        EntryStyleBackEven.clipping = TextClipping.Overflow;
+        EntryStyleBackEven.stretchWidth = true;
+
+        EntryStyleBackOdd = new GUIStyle(EntryStyleBackEven);
+        EntryStyleBackOdd.normal = unityLogLineOdd.normal;
+
+        DetailsEntryStyleBackEven = new GUIStyle(EntryStyleBackEven);
+        DetailsEntryStyleBackOdd = new GUIStyle(EntryStyleBackOdd);
+
+        SizerLineColour = new Color(defaultLineColor.r * 0.5f, defaultLineColor.g * 0.5f, defaultLineColor.b * 0.5f);
     }
 
     //Some helper functions to draw buttons that are only as big as their text
@@ -257,6 +275,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         Vector2 elementSize;
         if(ButtonClamped("Clear", EditorStyles.toolbarButton, out elementSize))
         {
+            FilterChanged = true;
             EditorLogger.Clear();
         }
         DrawPos.x += elementSize.x;
@@ -282,6 +301,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         if(collapse!=Collapse)
         {
             MakeDirty = true;
+            FilterChanged = true;
             Collapse = collapse;
             SelectedRenderLog = -1;
         }
@@ -315,6 +335,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         //If the errors/warning to show has changed, clear the selected message
         if(showErrors!=ShowErrors || showWarnings!=ShowWarnings || showMessages!=ShowMessages)
         {
+            FilterChanged = true;
             ClearSelectedMessage();
             MakeDirty = true;
         }
@@ -348,6 +369,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             CurrentChannel = channels[currentChannelIndex];
             ClearSelectedMessage();
             MakeDirty = true;
+            FilterChanged = true;
         }
         DrawPos.y+=size.y;
     }
@@ -428,53 +450,58 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         // If we've been marked dirty, we need to recalculate the elements to be displayed
         if(Dirty)
         {
-            CollapseBadgeMaxWidth = 0;
-            RenderLogs.Clear();
+            if (FilterChanged)
+            {
+                CollapseBadgeMaxWidth = 0;
+                MaxCollapseCount = 0;
+                RenderLogs.Clear();
+                NextIndexToAdd = 0;
+
+                CollapsedLines.Clear();
+                CollapsedLinesList.Clear();
+            }
 
             //When collapsed, count up the unique elements and use those to display
             if(Collapse)
             {
-                var collapsedLines = new Dictionary<string, CountedLog>();
-                var collapsedLinesList = new List<CountedLog>();
-
-                foreach(var log in CurrentLogList)
+                for (var i = NextIndexToAdd; i < CurrentLogList.Count; i++)
                 {
-                    if(ShouldShowLog(filterRegex, log))
+                    var log = CurrentLogList[i];
+                    if (ShouldShowLog(filterRegex, log))
                     {
                         var matchString = log.Message + "!$" + log.Severity + "!$" + log.Channel;
 
                         CountedLog countedLog;
-                        if(collapsedLines.TryGetValue(matchString, out countedLog))
+                        if (CollapsedLines.TryGetValue(matchString, out countedLog))
                         {
                             countedLog.Count++;
                         }
                         else
                         {
                             countedLog = new CountedLog(log, 1);
-                            collapsedLines.Add(matchString, countedLog);
-                            collapsedLinesList.Add(countedLog);
+                            CollapsedLines.Add(matchString, countedLog);
+                            CollapsedLinesList.Add(countedLog);
+                            RenderLogs.Add(countedLog);
+                        }
+
+                        if (MaxCollapseCount < countedLog.Count)
+                        {
+                            MaxCollapseCount = countedLog.Count;
                         }
                     }
                 }
 
-                int maxCollapseCount = 0;
-                foreach(var countedLog in collapsedLinesList)
-                {
-                    RenderLogs.Add(countedLog);
-
-                    maxCollapseCount = Mathf.Max(maxCollapseCount, countedLog.Count);
-                    
-                }
-                var collapseBadgeContent = new GUIContent(maxCollapseCount.ToString());
+                var collapseBadgeContent = new GUIContent(MaxCollapseCount.ToString());
                 var collapseBadgeSize = collapseBadgeStyle.CalcSize(collapseBadgeContent);
                 CollapseBadgeMaxWidth = Mathf.Max(CollapseBadgeMaxWidth, collapseBadgeSize.x);
             }
             //If we're not collapsed, display everything in order
             else
             {
-                foreach(var log in CurrentLogList)
+                for (var i = NextIndexToAdd; i < CurrentLogList.Count; i++)
                 {
-                    if(ShouldShowLog(filterRegex, log))
+                    var log = CurrentLogList[i];
+                    if (ShouldShowLog(filterRegex, log))
                     {
                         RenderLogs.Add(new CountedLog(log, 1));
                     }
@@ -586,6 +613,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         {
             LogListScrollPosition.y = ((RenderLogs.Count+1)*LogListLineHeight)-scrollRect.height;
         }
+
+        NextIndexToAdd = CurrentLogList.Count;
 
         GUI.EndScrollView();
         DrawPos.y += height;
@@ -811,6 +840,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         {
             ClearSelectedMessage();
             FilterRegex = filterRegex;
+            FilterChanged = true;
             MakeDirty = true;
         }
             
@@ -980,6 +1010,12 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     bool ShowMessages = true; 
     int SelectedCallstackFrame = 0;
     bool ShowFrameSource = false;
+    List<CountedLog> RenderLogs = new List<CountedLog>();
+    Dictionary<string, CountedLog> CollapsedLines = new Dictionary<string, CountedLog>();
+    List<CountedLog> CollapsedLinesList = new List<CountedLog>();
+    int MaxCollapseCount = 0;
+    float CollapseBadgeMaxWidth = 0;
+    const string LogListControlName = "LogList";
 
     class CountedLog
     {
@@ -991,8 +1027,4 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             Count = count;
         }
     }
-
-    List<CountedLog> RenderLogs = new List<CountedLog>();
-    float CollapseBadgeMaxWidth = 0;
-    private const string LogListControlName = "LogList";
 }
