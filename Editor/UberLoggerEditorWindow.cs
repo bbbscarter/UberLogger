@@ -173,18 +173,18 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         EntryStyleBackEven.border = new RectOffset(0, 0, 0, 0);
         EntryStyleBackEven.fixedHeight = 0;
         EntryStyleBackEven.fixedWidth = 0;
-        EntryStyleBackEven.wordWrap = true;
+        
         EntryStyleBackEven.clipping = TextClipping.Overflow;
         EntryStyleBackEven.stretchWidth = true;
 
         EntryStyleBackOdd = new GUIStyle(EntryStyleBackEven);
         EntryStyleBackOdd.normal = unityLogLineOdd.normal;
-        // EntryStyleBackOdd = new GUIStyle(unityLogLine);
 
+        DetailsEntryStyleBackEven = new GUIStyle(EntryStyleBackEven);
+        DetailsEntryStyleBackOdd = new GUIStyle(EntryStyleBackOdd);
 
         SizerLineColour = new Color(defaultLineColor.r*0.5f, defaultLineColor.g*0.5f, defaultLineColor.b*0.5f);
 
-        // GUILayout.BeginVertical(GUILayout.Height(topPanelHeaderHeight), GUILayout.MinHeight(topPanelHeaderHeight));
         ResizeTopPane();
         DrawPos = Vector2.zero;
         DrawToolbar();
@@ -411,7 +411,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
     public void DrawLogList(float height)
     {
         var oldColor = GUI.backgroundColor;
-
+        GUI.SetNextControlName(LogListControlName);
 
         float buttonY = 0;
         
@@ -499,7 +499,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             }
         }
         
-        float logLineX = CollapseBadgeMaxWidth;
+        EntryStyleBackEven.padding.left = (int) (CollapseBadgeMaxWidth + LogListLineHeight + 4);
+        EntryStyleBackOdd.padding.left = EntryStyleBackEven.padding.left;
 
         //Render all the elements
         int firstRenderLogIndex = (int) (LogListScrollPosition.y/LogListLineHeight);
@@ -513,7 +514,6 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             var countedLog = RenderLogs[renderLogIndex];
             var log = countedLog.Log;
             logLineStyle = (renderLogIndex%2==0) ? EntryStyleBackEven : EntryStyleBackOdd;
-            logLineStyle.wordWrap = false;
             if (renderLogIndex==SelectedRenderLog)
             {
                 GUI.backgroundColor = new Color(0.5f, 0.5f, 1);
@@ -525,15 +525,13 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 
             //Make all messages single line
             var content = GetLogLineGUIContent(log, ShowTimes, ShowChannels);
-            var drawRect = new Rect(logLineX, buttonY, contentRect.width, LogListLineHeight);
-            var iconRect = drawRect;
-            iconRect.width = LogListLineHeight;
-            GUI.DrawTexture(iconRect, GetIconForLog(log), ScaleMode.ScaleAndCrop);
-            drawRect.x += iconRect.width + 4;
+            var drawRect = new Rect(0, buttonY, contentRect.width, LogListLineHeight);
+           
             if (GUI.Button(drawRect, content, logLineStyle))
             {
+                GUI.FocusControl(LogListControlName);
                 //Select a message, or jump to source if it's double-clicked
-                if(renderLogIndex==SelectedRenderLog)
+                if (renderLogIndex==SelectedRenderLog)
                 {
                     if(EditorApplication.timeSinceStartup-LastMessageClickTime<DoubleClickInterval)
                     {
@@ -567,8 +565,15 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 }
             }
 
-            if(Collapse)
+            var iconRect = drawRect;
+            iconRect.x = CollapseBadgeMaxWidth + 2;
+            iconRect.width = LogListLineHeight;
+
+            GUI.DrawTexture(iconRect, GetIconForLog(log), ScaleMode.ScaleAndCrop);
+
+            if (Collapse)
             {
+                GUI.backgroundColor = Color.white;
                 var collapseBadgeContent = new GUIContent(countedLog.Count.ToString());
                 var collapseBadgeRect = new Rect(0, buttonY, CollapseBadgeMaxWidth, LogListLineHeight);
                 GUI.Button(collapseBadgeRect, collapseBadgeContent, collapseBadgeStyle);
@@ -602,8 +607,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
         {
             var countedLog = RenderLogs[SelectedRenderLog];
             var log = countedLog.Log;
-            var logLineStyle = EntryStyleBackEven;
-
+            var logLineStyle = DetailsEntryStyleBackEven;
+            logLineStyle.wordWrap = true;
             var sourceStyle = new GUIStyle(GUI.skin.textArea);
             sourceStyle.richText = true;
 
@@ -615,8 +620,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             float contentWidth = 0;
             float lineHeight = 0;
             var messageContent = new GUIContent(log.Message);
-            var messageHeight = logLineStyle.CalcHeight(messageContent, position.width);
-
+            var messageHeight = logLineStyle.CalcHeight(messageContent, position.width) + LogListLineHeight;
 
             for (int c1=0; c1<log.Callstack.Count; c1++)
             {
@@ -652,8 +656,10 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
             LogDetailsScrollPosition = GUI.BeginScrollView(drawRect, LogDetailsScrollPosition, contentRect);
 
             float lineY = 0;
-            var messageRect = new Rect(0, lineY, contentRect.width, messageHeight);
+            var messageRect = new Rect(0, lineY, position.width, messageHeight);
+            
             EditorGUI.SelectableLabel(messageRect, log.Message, logLineStyle);
+            logLineStyle.wordWrap = false;
 
             lineY += messageHeight;
 
@@ -663,7 +669,7 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
                 var lineContent = detailLines[c1];
                 if(lineContent!=null)
                 {
-                    logLineStyle = (c1%2==0) ? EntryStyleBackEven : EntryStyleBackOdd;
+                    logLineStyle = (c1%2==0) ? DetailsEntryStyleBackEven : DetailsEntryStyleBackOdd;
                     if(c1==SelectedCallstackFrame)
                     {
                         GUI.backgroundColor = new Color(0.5f, 0.5f, 1);
@@ -965,6 +971,8 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 
     GUIStyle EntryStyleBackEven;
     GUIStyle EntryStyleBackOdd;
+    GUIStyle DetailsEntryStyleBackEven;
+    GUIStyle DetailsEntryStyleBackOdd;
     string CurrentChannel=null;
     string FilterRegex = null;
     bool ShowErrors = true; 
@@ -986,5 +994,5 @@ public class UberLoggerEditorWindow : EditorWindow, UberLoggerEditor.ILoggerWind
 
     List<CountedLog> RenderLogs = new List<CountedLog>();
     float CollapseBadgeMaxWidth = 0;
-
+    private const string LogListControlName = "LogList";
 }
