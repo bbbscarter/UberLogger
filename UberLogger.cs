@@ -262,7 +262,7 @@ namespace UberLogger
             Application.RegisterLogCallback(UnityLogHandler);
 #endif
             StartTick = DateTime.Now.Ticks;
-            UnityMessageRegex = new Regex(@"(.*)\((\d+).*\)");
+            UnityMessageRegex = new Regex(@"^([^\(]*)\((\d+)[^\)]*\)");
         }
 
         /// <summary>
@@ -330,12 +330,12 @@ namespace UberLogger
         static public bool ExtractInfoFromUnityMessage(string log, ref string filename, ref int lineNumber)
         {
             // log = "Assets/Code/Debug.cs(140,21): warning CS0618: 'some error'
-            var match = UnityMessageRegex.Matches(log);
+            var firstMatch = UnityMessageRegex.Match(log);
 
-            if(match.Count>0)
+            if (firstMatch.Success)
             {
-                filename = match[0].Groups[1].Value;
-                lineNumber = Convert.ToInt32(match[0].Groups[2].Value);
+                filename = firstMatch.Groups[1].Value;
+                lineNumber = Convert.ToInt32(firstMatch.Groups[2].Value);
                 return true;
             }
             return false;
