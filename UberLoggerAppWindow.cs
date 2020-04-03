@@ -134,7 +134,12 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
         DrawToolbar();
         DrawFilter();
         DrawChannels();
-        DrawLogList();
+        if ( LatestOnTop ) {
+            DrawLogListDescending();
+        } else {
+            DrawLogListAscending();
+        }
+        //DrawLogList();
         GUILayout.EndVertical();
         ResizeTopPane();
 
@@ -182,6 +187,7 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
         }
         // PauseOnError  = ToggleClamped(PauseOnError, "Pause On Error", toolbarStyle);
         ShowTimes = ToggleClamped(ShowTimes, "Show Times", toolbarStyle);
+        LatestOnTop = ToggleClamped(LatestOnTop, LatestOnTop ? "Desc" : "Asc", toolbarStyle);
 
         var buttonSize = toolbarStyle.CalcSize(new GUIContent("T")).y;
         GUILayout.FlexibleSpace();
@@ -246,9 +252,9 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
     }
 
     /// <summary>
-    /// Draws the main log panel
+    /// Draws the main log panel ascending, latest log will be at the bottom
     /// </summary>
-    public void DrawLogList()
+    public void DrawLogListAscending()
     {
         var oldColor = GUI.backgroundColor;
 
@@ -267,6 +273,7 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
 
         int drawnButtons = 0;
         var logLineStyle = LogLineStyle1;
+        
         for(int c1=0; c1<LogInfo.Count; c1++)
         {
             var log = LogInfo[c1];
@@ -303,6 +310,92 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
                         if(c1==SelectedMessage)
                         {
                             if(Time.realtimeSinceStartup-LastMessageClickTime<0.3f)
+                            {
+                                LastMessageClickTime = 0;
+                            }
+                            else
+                            {
+                                LastMessageClickTime = Time.realtimeSinceStartup;
+                            }
+                        }
+                        else
+                        {
+                            SelectedMessage = c1;
+                            SelectedCallstackFrame = -1;
+                        }
+                    }
+                }
+                else
+                {
+                    GUILayout.Space(buttonHeight);
+                }
+                buttonY += buttonHeight;
+            }
+        }
+        GUILayout.EndScrollView();
+        GUI.backgroundColor = oldColor;
+    }
+
+    /// <summary>
+    /// Draws the main log panel descending, oldest log will be at the bottom
+    /// </summary>
+    public void DrawLogListDescending()
+    {
+        var oldColor = GUI.backgroundColor;
+
+        LogListScrollPosition = GUILayout.BeginScrollView(LogListScrollPosition);
+        var maxLogPanelHeight = WindowRect.height;
+
+        float buttonY = 0;
+        float buttonHeight = LogLineStyle1.CalcSize(new GUIContent("Test")).y;
+
+        System.Text.RegularExpressions.Regex filterRegex = null;
+
+        if (!String.IsNullOrEmpty(FilterRegex))
+        {
+            filterRegex = new System.Text.RegularExpressions.Regex(FilterRegex);
+        }
+
+        int drawnButtons = 0;
+        var logLineStyle = LogLineStyle1;
+
+        //for (int c1 = 0; c1 < LogInfo.Count; c1++)
+        for (int c1 = LogInfo.Count - 1; c1 >= 0; c1--)
+        {
+            var log = LogInfo[c1];
+            if (ShouldShowLog(filterRegex, log))
+            {
+                drawnButtons++;
+
+                //This is an optimisation - if the button isn't going to display because it's outside of the scroll window, don't show it.
+                //But, so as not to confuse GUILayout, draw something simple instead.
+                if (buttonY + buttonHeight > LogListScrollPosition.y && buttonY < LogListScrollPosition.y + maxLogPanelHeight)
+                {
+                    if (c1 == SelectedMessage)
+                    {
+                        logLineStyle = SelectedLogLineStyle;
+                    }
+                    else
+                    {
+                        logLineStyle = (drawnButtons % 2 == 0) ? LogLineStyle1 : LogLineStyle2;
+                    }
+
+                    var showMessage = log.Message;
+
+                    //Make all messages single line
+                    showMessage = showMessage.Replace(UberLogger.Logger.UnityInternalNewLine, " ");
+                    if (ShowTimes)
+                    {
+                        showMessage = log.GetRelativeTimeStampAsString() + ": " + showMessage;
+                    }
+
+                    var content = new GUIContent(showMessage, GetIconForLog(log));
+                    if (GUILayout.Button(content, logLineStyle, GUILayout.Height(buttonHeight)))
+                    {
+                        //Select a message, or jump to source if it's double-clicked
+                        if (c1 == SelectedMessage)
+                        {
+                            if (Time.realtimeSinceStartup - LastMessageClickTime < 0.3f)
                             {
                                 LastMessageClickTime = 0;
                             }
@@ -465,7 +558,7 @@ public class UberLoggerAppWindow : MonoBehaviour, UberLogger.ILogger
     Vector2 LogListScrollPosition;
     Vector2 LogDetailsScrollPosition;
 
-
+    bool LatestOnTop = false;
     bool ShowTimes = true;
     float CurrentTopPaneHeight;
     int SelectedMessage = -1;
