@@ -51,6 +51,30 @@ namespace UberLogger
         bool ApplyFilter(string channel, UnityEngine.Object source, LogSeverity severity, object message, params object[] par);
     }
 
+    public class FilterWarnings : IFilter
+    {
+        public bool ApplyFilter(string channel, UnityEngine.Object source, LogSeverity severity, object message, params object[] par)
+        {
+            return severity!=LogSeverity.Warning;
+        }
+    }
+
+    public class FilterErrors : IFilter
+    {
+        public bool ApplyFilter(string channel, UnityEngine.Object source, LogSeverity severity, object message, params object[] par)
+        {
+            return severity!=LogSeverity.Error;
+        }
+    }
+
+    public class FilterMessages : IFilter
+    {
+        public bool ApplyFilter(string channel, UnityEngine.Object source, LogSeverity severity, object message, params object[] par)
+        {
+            return severity!=LogSeverity.Message;
+        }
+    }
+
     //Information about a particular frame of a callstack
     [System.Serializable]
     public class LogStackFrame
@@ -250,8 +274,9 @@ namespace UberLogger
         static long StartTick;
         static bool AlreadyLogging = false;
         static Regex UnityMessageRegex;
-        static List<IFilter> Filters = new List<IFilter>();
-        
+        static List<IFilter> GlobalFilters = new List<IFilter>();
+        static Dictionary<string, List<IFilter>> ChannelFilters = new Dictionary<string, List<IFilter>>();
+
         static Logger()
         {
             // Register with Unity's logging system
@@ -273,7 +298,7 @@ namespace UberLogger
         {
             UnityLogInternal(logString, stackTrace, logType);
         }
-    
+
         static public double GetRelativeTime()
         {
             long ticks = DateTime.Now.Ticks;
@@ -304,15 +329,59 @@ namespace UberLogger
         }
 
         /// <summary>
-        /// Registers a new filter mechanism, which will be able to silence any future log messages
+        /// Adds a filter to the global list of filters.
         /// </summary>
-        static public void AddFilter(IFilter filter)
+        static public void AddGlobalFilter(IFilter filter)
         {
             lock (Loggers)
             {
-                Filters.Add(filter);
+                GlobalFilters.Add(filter);
             }
         }
+
+        /// <summary>
+        /// Removes a filter from the global list of filters.
+        /// </summary>
+        static public void RemoveGlobalFilter(IFilter filter)
+        {
+            lock (Loggers)
+            {
+                GlobalFilters.Remove(filter);
+            }
+        }
+
+        /// <summary>
+        /// Adds a filter to the named channel
+        /// </summary>
+        static public void AddChannelFilter(string channelName, IFilter filter)
+        {
+            lock (Loggers)
+            {
+                List<IFilter> channelFilterList;
+                if(!ChannelFilters.TryGetValue(channelName, out channelFilterList))
+                {
+                    channelFilterList = new List<IFilter>();
+                    ChannelFilters[channelName] = channelFilterList;
+                }
+                channelFilterList.Add(filter);
+            }
+        }
+
+        /// <summary>
+        /// Removes a filter from the named channel's list of filters.
+        /// </summary>
+        static public void RemoveChannelFilter(string channelName, IFilter filter)
+        {
+            lock (Loggers)
+            {
+                List<IFilter> channelFilterList;
+                if(ChannelFilters.TryGetValue(channelName, out channelFilterList))
+                {
+                    channelFilterList.Remove(filter);
+                }
+            }
+        }
+
 
         /// <summary>
         /// Paths provided by Unity will contain forward slashes as directory separators on all OSes.
@@ -340,7 +409,7 @@ namespace UberLogger
             }
             return false;
         }
-    
+
 
         /// <summary>
         /// Tries to extract useful information about the log from a Unity stack trace
@@ -470,7 +539,7 @@ namespace UberLogger
                     if (showHideMode == IgnoredUnityMethod.Mode.Show)
                     {
                         var logStackFrame = new LogStackFrame(stackFrame);
-                        
+
                         callstack.Add(logStackFrame);
 
                         if (setOriginatingSourceLocation)
@@ -481,7 +550,7 @@ namespace UberLogger
 
             // Callstack has been processed backwards -- correct order for presentation
             callstack.Reverse();
-        
+
             return false;
         }
 
@@ -527,7 +596,7 @@ namespace UberLogger
                     try
                     {
                         AlreadyLogging = true;
-                    
+
                         var callstack = new List<LogStackFrame>();
                         LogStackFrame originatingSourceLocation;
                         var unityOnly = GetCallstack(ref callstack, out originatingSourceLocation);
@@ -536,7 +605,7 @@ namespace UberLogger
                             return;
                         }
 
-                        //If we have no useful callstack, fall back to parsing Unity's callstack 
+                        //If we have no useful callstack, fall back to parsing Unity's callstack
                         if(callstack.Count==0)
                         {
                             callstack = GetCallstackFromUnityLog(unityCallStack, out originatingSourceLocation);
@@ -554,7 +623,7 @@ namespace UberLogger
 
                         string filename = "";
                         int lineNumber = 0;
-                    
+
                         //Finally, parse the error message so we can get basic file and line information
                         if(ExtractInfoFromUnityMessage(unityMessage, ref filename, ref lineNumber))
                         {
@@ -597,12 +666,22 @@ namespace UberLogger
                     {
                         AlreadyLogging = true;
 
-                        foreach (IFilter filter in Filters)
+                        foreach (IFilter filter in GlobalFilters)
                         {
                             if (!filter.ApplyFilter(channel, source, severity, message, par))
                                 return;
                         }
-						
+
+                        List<IFilter> channelFilters;
+                        if(ChannelFilters.TryGetValue(channel, out channelFilters))
+                        {
+                            foreach (IFilter filter in channelFilters)
+                            {
+                                if (!filter.ApplyFilter(channel, source, severity, message, par))
+                                    return;
+                            }
+                        }
+
                         var callstack = new List<LogStackFrame>();
                         LogStackFrame originatingSourceLocation;
                         var unityOnly = GetCallstack(ref callstack, out originatingSourceLocation);

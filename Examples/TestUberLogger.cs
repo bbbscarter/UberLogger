@@ -5,10 +5,12 @@ using System.Threading;
 public class TestUberLogger : MonoBehaviour
 {
     Thread TestThread;
-    // Use this for initialization
+    UberLoggerChannel WigWamChannel;
+
     void Start ()
     {
         UberLogger.Logger.AddLogger(new UberLoggerFile("UberLogger.log"), false);
+        WigWamChannel = new UberLoggerChannel("WigWam", new List<UberLogger.IFilter>() { new UberLogger.FilterWarnings() });
         DoTest();
         TestThread = new Thread(new ThreadStart(TestThreadEntry));
         TestThread.Start();
@@ -23,13 +25,15 @@ public class TestUberLogger : MonoBehaviour
         TestThread.Abort();
         TestThread.Join();
     }
+
     void TestThreadEntry()
     {
         for(;;)
         {
             Debug.Log("Thread Log Message");
             UberDebug.Log("Thread ULog Message");
-            Thread.Sleep(100);
+            WigWamChannel.Log("Wigwam says 'threads'");
+            Thread.Sleep(1000);
         }
     }
 
@@ -71,6 +75,10 @@ public class TestUberLogger : MonoBehaviour
         UberDebug.LogErrorChannel("Test", "ULogErrorChannel with param {0}", "Test");
         UberDebug.LogErrorChannel(gameObject, "Test", "ULogErrorChannel with GameObject");
         UberDebug.LogErrorChannel(gameObject, "Test", "ULogErrorChannel with GameObject and param {0}", "Test");
+
+        WigWamChannel.LogWarning("I should not be seen");
+        WigWamChannel.Log("But I should be seen");
+
     }
 	
 	// Update is called once per frame
